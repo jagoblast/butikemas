@@ -59,28 +59,29 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Akreditasi & Keamanan */}
+          {/* Akreditasi & Keamanan Menggunakan URL Eksternal */}
           <div>
             <div className="mb-6">
               <h3 className="font-bold text-gold-400 mb-3 text-[16px]">Akreditasi</h3>
               <div className="flex items-center gap-4">
-                <img src="/images/lbma.png" alt="LBMA" className="object-contain h-10 w-auto" />
-                <img src="/images/kan.png" alt="KAN" className="object-contain h-10 w-auto" />
+                <img src="https://emas.pasdigi.id/images/lbma.png" alt="LBMA" className="object-contain h-10 w-auto" />
+                <img src="https://emas.pasdigi.id/images/kan.png" alt="KAN" className="object-contain h-10 w-auto" />
+                <img src="https://emas.pasdigi.id/images/cert.png" alt="Sertifikat" className="object-contain h-10 w-auto" />
               </div>
             </div>
             <div>
               <h3 className="font-bold text-gold-400 mb-3 text-[16px]">Keamanan</h3>
               <div className="flex items-center gap-4">
-                <img src="/images/ssl.png" alt="SSL" className="object-contain h-10 w-auto" />
+                <img src="https://emas.pasdigi.id/images/ssl.png" alt="SSL" className="object-contain h-10 w-auto" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom Logos */}
+        {/* Bottom Logos Menggunakan URL Eksternal */}
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-8 sm:gap-6">
-          <img src="/images/lm.png" alt="Logam Mulia" className="h-auto w-[220px] max-w-[76vw] object-contain sm:w-[240px]" />
-          <img src="/images/antam.png" alt="Antam" className="h-auto w-[168px] max-w-[58vw] object-contain sm:w-[190px]" />
+          <img src="https://emas.pasdigi.id/images/lm.png" alt="Logam Mulia" className="h-auto w-[220px] max-w-[76vw] object-contain sm:w-[240px]" />
+          <img src="https://emas.pasdigi.id/images/antam.png" alt="Antam" className="h-auto w-[168px] max-w-[58vw] object-contain sm:w-[190px]" />
         </div>
       </div>
     </footer>
