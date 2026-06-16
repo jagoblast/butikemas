@@ -1,0 +1,53 @@
+{
+  "compilerOptions": {
+    /* Target & Module */
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    
+    /* DOM & Cloudflare Types */
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": [
+      "@cloudflare/workers-types",
+      "vite/client"
+    ],
+    
+    /* JSX Configuration untuk HonoX & React Islands */
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    
+    /* Strict Type-Checking */
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    /* Modul & Interoperability */
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    
+    /* Build Process (Di-handle oleh Vite, bukan tsc) */
+    "noEmit": true,
+    "skipLibCheck": true,
+    
+    /* Alias Paths (Opsional, agar import lebih rapi) */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@src/*": ["./src/*"],
+      "@app/*": ["./app/*"]
+    }
+  },
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "vite.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    ".wrangler"
+  ]
+}
