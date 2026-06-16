@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { ChevronDown, Headphones, LogOut, Menu, ShoppingCart, User, UserPlus, X } from 'lucide-react'
 
-// Utility class merger pengganti cn dari utils
+// Utility class merger
 const cn = (...classes: (string | undefined | null | false)[]) => classes.filter(Boolean).join(' ')
 
 export default function Navbar() {
@@ -11,7 +11,6 @@ export default function Navbar() {
   const [currentPath, setCurrentPath] = useState('/')
   const profileRef = useRef<HTMLDivElement>(null)
 
-  // Efek untuk scroll dan deteksi path saat ini (Client Side)
   useEffect(() => {
     setCurrentPath(window.location.pathname)
     const handler = () => setScrolled(window.scrollY > 10)
@@ -19,7 +18,6 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handler)
   }, [])
 
-  // Menutup profil jika klik di luar
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
       if (!profileRef.current?.contains(event.target as Node)) {
@@ -47,10 +45,14 @@ export default function Navbar() {
       >
         <nav className="relative flex h-16 w-full items-center gap-6 px-5 md:grid md:h-20 md:grid-cols-[minmax(260px,1fr)_auto_minmax(260px,1fr)] md:px-7 lg:px-10">
           
-          {/* Logo */}
+          {/* Logo dengan URL Eksternal */}
           <a href="/" className="flex min-w-0 items-center group relative z-10 md:justify-self-start">
             <div className="relative h-9 w-9 flex-shrink-0 md:flex md:h-12 md:w-14 md:items-center md:justify-center md:rounded-lg md:bg-navy-950 md:p-2">
-              <img src="/images/logo-lm.png" alt="Logo" className="w-full h-full object-contain" />
+              <img 
+                src="https://emas.pasdigi.id/images/logo-lm.png" 
+                alt="Logo" 
+                className="w-full h-full object-contain" 
+              />
             </div>
             <span className="ml-3 hidden whitespace-nowrap font-heading text-[24px] font-bold tracking-wide text-navy-900 md:block">
               Butik Emas
