@@ -1,21 +1,44 @@
-// Mengimpor Island (Komponen yang hidup di sisi klien untuk interaksi form)
-import AdminProductForm from '../../../islands/AdminProductForm'
+import { createRoute } from 'honox/factory'
 
-export default async function AdminProductsPage() {
-  return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border">
+// Menggunakan createRoute agar kita bisa melempar metadata (seperti title) ke layout
+export default createRoute((c) => {
+  return c.render(
+    <div className="max-w-5xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Manajemen Produk</h2>
-        {/* Tombol ini bisa disetel untuk membuka modal form (ada di dalam island) */}
+        <h2 className="text-2xl font-bold text-slate-800">Daftar Produk</h2>
+        {/* Navigasi MPA untuk pindah halaman tambah produk */}
+        <a 
+          href="/admin/products/new" 
+          className="bg-gold-500 hover:bg-gold-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+        >
+          + Tambah Produk
+        </a>
       </div>
 
-      {/* Kita panggil komponen Island yang bertugas mengelola form input */}
-      <AdminProductForm />
-
-      {/* Di sini nantinya akan ada tabel yang menampilkan list produk */}
-      <div className="mt-8 border-t pt-6">
-        <p className="text-gray-500 text-sm">Tabel produk akan dimuat di sini...</p>
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200 text-sm text-slate-600">
+              <th className="p-4 font-semibold">Nama Produk</th>
+              <th className="p-4 font-semibold">Harga</th>
+              <th className="p-4 font-semibold">Stok</th>
+              <th className="p-4 font-semibold">Aksi</th>
+            </tr>
+          </thead>
+          <tbody className="text-sm text-slate-700">
+            {/* Tabel akan diisi data dari database (D1) nantinya */}
+            <tr className="border-b border-slate-100 hover:bg-slate-50">
+              <td className="p-4 font-medium">Emas Batangan 1 Gram</td>
+              <td className="p-4">Rp 1.350.000</td>
+              <td className="p-4">15</td>
+              <td className="p-4">
+                <a href="/admin/products/1/edit" className="text-blue-600 hover:underline">Edit</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
+    </div>,
+    { title: 'Kelola Produk' } // title ini akan diterima oleh _renderer.tsx
   )
-}
+})
