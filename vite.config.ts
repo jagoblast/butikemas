@@ -3,19 +3,33 @@ import honox from 'honox/vite'
 import client from 'honox/vite/client'
 import { defineConfig } from 'vite'
 
+// Import plugin CSS secara manual
+import tailwindcss from 'tailwindcss'
+import autoprefixer from 'autoprefixer'
+
 export default defineConfig(({ mode }) => {
-  // Jika sedang mem-build frontend (browser)
+  // Konfigurasi wajib untuk memaksa Vite memproses Tailwind
+  const cssConfig = {
+    postcss: {
+      plugins: [
+        tailwindcss(),
+        autoprefixer()
+      ]
+    }
+  }
+
   if (mode === 'client') {
     return {
-      plugins: [client()]
+      plugins: [client()],
+      css: cssConfig
     }
   }
   
-  // Jika sedang mem-build server (Cloudflare Edge)
   return {
     plugins: [
       honox(),
       pages()
-    ]
+    ],
+    css: cssConfig
   }
 })
