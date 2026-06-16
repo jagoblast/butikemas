@@ -1,5 +1,5 @@
 {
-  "name": "logam-mulia-edge",
+  "name": "butikemas",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,19 +9,23 @@
     "db:migrate": "wrangler d1 execute logam-mulia-db --file=./database/schema.sql"
   },
   "dependencies": {
+    "clsx": "^2.1.0",
     "hono": "^4.2.0",
     "honox": "^0.1.0",
-    "zod": "^3.22.0",
-    "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.0"
+    "lucide-react": "^0.378.0",
+    "tailwind-merge": "^2.2.0",
+    "zod": "^3.22.0"
   },
   "devDependencies": {
-    "vite": "^5.2.0",
-    "wrangler": "^3.40.0",
+    "@cloudflare/workers-types": "^4.20240405.0",
     "@hono/vite-cloudflare-pages": "^0.3.0",
     "@hono/vite-dev-server": "^0.10.0",
-    "tailwindcss": "^3.4.0",
+    "@types/node": "^20.12.0",
     "autoprefixer": "^10.4.0",
-    "postcss": "^8.4.0"
+    "postcss": "^8.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.0",
+    "wrangler": "^3.40.0"
   }
 }
