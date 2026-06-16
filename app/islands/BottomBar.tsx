@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'hono/jsx'
 
-// PERUBAHAN KUNCI: Menerima currentPath dari Server!
 export default function BottomBar({ currentPath }: { currentPath: string }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [cartCount, setCartCount] = useState(0)
@@ -28,12 +27,11 @@ export default function BottomBar({ currentPath }: { currentPath: string }) {
     }
   }, [])
 
-  // Menggunakan currentPath. Tidak akan pernah string kosong di Server!
+  // KOREKSI: '/cart' telah dihapus dari isHidden!
   const isHidden = 
     currentPath.match(/^\/products\/[^/]+$/) || 
     currentPath.match(/^\/orders\/[^/]+$/) ||
     currentPath.startsWith('/account/profile') ||
-    currentPath === '/cart' || 
     currentPath === '/checkout' ||
     currentPath.startsWith('/payment');
 
