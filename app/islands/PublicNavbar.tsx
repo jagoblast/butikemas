@@ -13,6 +13,7 @@ const X = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewB
 const MapPin = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
 const FileText = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
 const PackageIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+const HomeIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 
 export default function PublicNavbar() {
   const [scrolled, setScrolled] = useState(false)
@@ -226,15 +227,20 @@ export default function PublicNavbar() {
 
             <div className="flex-1 overflow-y-auto px-4 py-4">
               <div className="space-y-1">
+                {/* MENU BERANDA DAN HIGHLIGHT AKTIF SUDAH DITAMBAHKAN DI SINI */}
                 {[
+                  { label: 'Beranda', href: '/', icon: HomeIcon },
                   { label: 'Katalog Produk', href: '/products', icon: PackageIcon },
-                  { label: 'Butik Fisik', href: '/boutiques', icon: MapPin },
+                  { label: 'Jaringan Butik', href: '/boutiques', icon: MapPin },
                   { label: 'Edukasi Emas', href: '/articles', icon: FileText }
-                ].map((item) => (
-                  <a key={item.href} href={item.href} className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-bold text-navy-800 hover:bg-navy-50 transition-colors">
-                    <span className="flex items-center gap-3"><item.icon /> {item.label}</span>
-                  </a>
-                ))}
+                ].map((item) => {
+                  const active = checkIsActive(item.href)
+                  return (
+                    <a key={item.href} href={item.href} className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm font-bold transition-colors ${active ? 'bg-gold-50 text-gold-700' : 'text-navy-800 hover:bg-navy-50'}`}>
+                      <span className="flex items-center gap-3"><item.icon /> {item.label}</span>
+                    </a>
+                  )
+                })}
               </div>
 
               <div className="mt-5 border-t border-navy-100 pt-4">
