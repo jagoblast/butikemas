@@ -1,51 +1,69 @@
 import { useState, useEffect, useRef } from 'hono/jsx'
 
-// Ikon Presisi sesuai gambar
-const HomeIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-const BoxIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-const StoreIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
-const ArticleIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-const CartIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/></svg>
-const HelpIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
-const UserIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-const UserPlusIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-const LoginIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
-const ChevronDown = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
-const ChevronUp = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m18 15-6-6-6 6"/></svg>
-const XIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-const MenuIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+// Ikon Murni sesuai Lucide di repositori Anda
+const Headphones = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+const ShoppingCart = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+const User = ({ className = "w-[18px] h-[18px]" }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="14" cy="7" r="4"/></svg>
+const UserPlus = () => <svg className="w-4 h-4 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+const LogOut = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+const ClipboardList = () => <svg className="w-4 h-4 text-gold-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>
+const ChevronDown = ({ className = "w-4 h-4" }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m6 9 6 6 6-6"/></svg>
+const Menu = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+const X = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+const MapPin = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+const FileText = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+const PackageIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
 
 export default function PublicNavbar() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isAuthOpen, setIsAuthOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const [cartCount, setCartCount] = useState(0)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userName, setUserName] = useState('')
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [currentPath, setCurrentPath] = useState('')
-  const authRef = useRef<HTMLDivElement | null>(null)
+  
+  const profileRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
+    // 1. Inisialisasi aman dari SSR (Hanya dieksekusi di browser)
     setCurrentPath(window.location.pathname)
-    setIsLoggedIn(document.cookie.includes('customer_session='))
-    
-    const syncCart = () => {
+    const authStatus = document.cookie.includes('customer_session=')
+    setIsLoggedIn(authStatus)
+    setUserName(authStatus ? 'Pelanggan' : '')
+
+    // 2. Deteksi Scroll untuk merubah background
+    const handleScroll = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    // 3. Sinkronisasi Keranjang
+    const syncCartCount = () => {
       const items = JSON.parse(localStorage.getItem('butikemas_cart') || '[]')
       setCartCount(items.reduce((sum: number, item: any) => sum + item.quantity, 0))
     }
-    syncCart()
-    window.addEventListener('cartUpdated', syncCart)
+    syncCartCount()
+    window.addEventListener('cartUpdated', syncCartCount)
 
-    function handleClickOutside(event: MouseEvent) {
-      if (authRef.current && !authRef.current.contains(event.target as Node)) {
-        setIsAuthOpen(false)
+    // 4. Tutup Dropdown jika klik di luar
+    function handleOutsideClick(event: MouseEvent) {
+      if (!profileRef.current?.contains(event.target as Node)) {
+        setIsProfileOpen(false)
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('mousedown', handleOutsideClick)
 
     return () => {
-      window.removeEventListener('cartUpdated', syncCart)
-      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('cartUpdated', syncCartCount)
+      document.removeEventListener('mousedown', handleOutsideClick)
     }
   }, [])
+
+  // Mengunci scroll background saat menu HP terbuka
+  useEffect(() => {
+    document.body.style.overflow = isMenuOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [isMenuOpen])
 
   const checkIsActive = (path: string) => {
     if (!currentPath) return false
@@ -55,179 +73,193 @@ export default function PublicNavbar() {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-              <a href="/" className="flex items-center gap-3">
-                <img src="https://emas.pasdigi.id/images/logo-lm.png" alt="Logam Mulia" className="h-8 w-auto" />
-                <span className="font-bold text-[22px] text-navy-900 tracking-tight font-serif">Logam Mulia</span>
-              </a>
-            </div>
-
-            {/* Menu Tengah Desktop */}
-            <div className="hidden md:flex items-center space-x-8">
-              {[
-                { label: 'Beranda', href: '/' },
-                { label: 'Produk', href: '/products' },
-                { label: 'Butik', href: '/boutiques' },
-                { label: 'Artikel', href: '/articles' },
-              ].map((item) => {
-                const active = checkIsActive(item.href)
-                return (
-                  <a 
-                    key={item.href} 
-                    href={item.href} 
-                    className={`text-[15px] font-bold transition-colors ${active ? 'text-navy-900 border-b-2 border-gold-500 pb-1' : 'text-gray-600 hover:text-navy-900'}`}
-                  >
-                    {item.label}
-                  </a>
-                )
-              })}
-            </div>
-
-            {/* Ikon Kanan Desktop & Hamburger */}
-            <div className="flex items-center gap-6">
-              <a href="https://wa.me/6281234567890" className="text-gray-500 hover:text-navy-900 hidden sm:block">
-                <HelpIcon />
-              </a>
-              <a href="/cart" className="text-gray-500 hover:text-navy-900 hidden sm:block relative">
-                <CartIcon />
-                {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold-500 px-1 text-[10px] font-bold text-navy-900 ring-2 ring-white">
-                    {cartCount > 99 ? '99+' : cartCount}
-                  </span>
-                )}
-              </a>
-              
-              <div className="hidden sm:block relative" ref={authRef}>
-                <button 
-                  onClick={() => setIsAuthOpen(!isAuthOpen)} 
-                  className={`flex items-center gap-2 px-5 py-2.5 border rounded-full transition-all text-sm font-bold ${
-                    isAuthOpen ? 'border-gold-500 text-gold-600 bg-gold-50/20' : 'border-gray-300 text-navy-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <UserIcon /> {isLoggedIn ? 'Akun' : 'Masuk'} {isAuthOpen ? <ChevronUp /> : <ChevronDown />}
-                </button>
-                {isAuthOpen && (
-                  <div className="absolute right-0 top-[calc(100%+0.75rem)] w-[280px] bg-white rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-gray-100 p-5">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
-                      {isLoggedIn ? 'Menu Akun' : 'Akses Akun'}
-                    </p>
-                    <p className="text-sm text-gray-600 mb-5 leading-relaxed">
-                      {isLoggedIn ? 'Kelola profil, riwayat pesanan, dan keranjang belanja Anda.' : 'Masuk untuk checkout dan menyimpan profil belanja.'}
-                    </p>
-                    <div className="flex flex-col gap-3">
-                      {isLoggedIn ? (
-                        <>
-                          <a href="/customer" className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#c99738] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#b38632]">
-                            <UserIcon /> Akun Saya
-                          </a>
-                          <a href="/api/auth/logout" className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-red-600 transition-colors hover:bg-red-50">
-                            Keluar
-                          </a>
-                        </>
-                      ) : (
-                        <>
-                          <a href="/login" className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#c99738] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#b38632]">
-                            <UserIcon /> Masuk
-                          </a>
-                          <a href="/register" className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-navy-900 transition-colors hover:bg-gray-50">
-                            <UserPlusIcon /> Daftar
-                          </a>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden text-navy-900">
-                <MenuIcon />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* Menu Drawer Mobile */}
-      <div className={`fixed inset-0 z-[60] md:hidden transition-opacity duration-300 ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <div className="absolute inset-0 bg-navy-900/50 backdrop-blur-sm" onClick={() => setIsMobileMenuOpen(false)} />
-        <div className={`absolute top-0 right-0 h-full w-[280px] bg-white shadow-2xl transform transition-transform duration-300 flex flex-col ${isMobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-          <div className="flex items-center justify-between p-5 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <img src="https://emas.pasdigi.id/images/logo-lm.png" alt="Logam Mulia" className="h-6 w-auto" />
-              <span className="font-bold text-lg text-navy-900 font-serif">Logam Mulia</span>
-            </div>
-            <button onClick={() => setIsMobileMenuOpen(false)} className="text-gray-500 hover:text-navy-900">
-              <XIcon />
-            </button>
-          </div>
+      {/* SPACER: Ini KUNCI UTAMA-nya! Karena Header menggunakan position "fixed",
+        ia melayang dan tidak memakan ruang di DOM. Kita butuh div kosong ini
+        sebagai ganjalan setinggi header agar konten di bawahnya tidak tertutup/menabrak!
+      */}
+      <div className="h-16 w-full md:h-20" aria-hidden="true" />
+      
+      <header
+        className={`fixed left-0 right-0 top-0 z-50 border-b border-navy-100 transition-all [transition-duration:var(--transition-slow)] ${
+          scrolled
+            ? 'bg-white/95 shadow-[0_10px_30px_-24px_rgba(15,27,45,0.6)] backdrop-blur-md'
+            : 'bg-white'
+        }`}
+      >
+        <nav className="relative flex h-16 w-full items-center gap-6 px-5 md:grid md:h-20 md:grid-cols-[minmax(260px,1fr)_auto_minmax(260px,1fr)] md:px-7 lg:px-10 max-w-[1400px] mx-auto">
           
-          <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+          {/* KIRI: Logo */}
+          <a href="/" className="flex min-w-0 items-center group relative z-10 md:justify-self-start" aria-label="Beranda">
+            <div className="relative h-9 w-9 flex-shrink-0 md:flex md:h-12 md:w-14 md:items-center md:justify-center md:rounded-lg md:bg-navy-950 md:p-2">
+              <img src="https://emas.pasdigi.id/images/logo-lm.png" alt="Logo" className="w-full h-full object-contain drop-shadow-sm transition-all group-hover:drop-shadow-md md:p-1.5" />
+            </div>
+            <span className="ml-3 hidden whitespace-nowrap font-heading text-[24px] font-bold tracking-wide text-navy-900 md:block font-serif">
+              Logam Mulia
+            </span>
+          </a>
+
+          {/* TENGAH (Mobile): Teks Logo di tengah */}
+          <a href="/" className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center z-10 md:hidden">
+            <div className="leading-tight">
+              <span className="block text-[22px] font-heading font-bold text-navy-900 tracking-wide font-serif">Logam Mulia</span>
+            </div>
+          </a>
+
+          {/* TENGAH (Desktop): Navigasi Link dengan efek garis emas */}
+          <div className="hidden items-center justify-center gap-10 md:flex md:justify-self-center">
             {[
-              { label: 'Beranda', href: '/', icon: HomeIcon },
-              { label: 'Produk', href: '/products', icon: BoxIcon },
-              { label: 'Butik', href: '/boutiques', icon: StoreIcon },
-              { label: 'Artikel', href: '/articles', icon: ArticleIcon },
-              { label: 'Keranjang', href: '/cart', icon: CartIcon },
+              { id: 'home', label: 'Beranda', href: '/' },
+              { id: 'products', label: 'Katalog Produk', href: '/products' },
+              { id: 'boutiques', label: 'Jaringan Butik', href: '/boutiques' },
+              { id: 'articles', label: 'Artikel', href: '/articles' }
             ].map((item) => {
               const active = checkIsActive(item.href)
               return (
-                <a key={item.href} href={item.href} className={`flex items-center gap-4 px-4 py-3 text-sm font-bold rounded-xl ${active ? 'bg-gold-50/50 text-navy-900' : 'text-gray-600 hover:bg-gray-50'}`}>
-                  <item.icon /> {item.label}
+                <a
+                  key={item.id}
+                  href={item.href}
+                  className={`relative py-2 text-[15px] font-bold transition-colors after:absolute after:left-0 after:right-0 after:-bottom-1.5 after:mx-auto after:h-0.5 after:w-0 after:rounded-full after:bg-gold-500 after:transition-all ${
+                    active ? 'text-navy-900 after:w-full' : 'text-navy-700 hover:text-navy-950'
+                  }`}
+                >
+                  {item.label}
                 </a>
               )
             })}
-            <a href="https://wa.me/6281234567890" className="flex items-center gap-4 px-4 py-3 text-sm font-bold text-gray-600 hover:bg-gray-50 rounded-xl"><HelpIcon /> Bantuan</a>
           </div>
 
-          <div className="p-5 border-t border-gray-100 space-y-3 bg-gray-50">
-            {isLoggedIn ? (
-               <>
-                 <a href="/customer" className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#b5852a] px-4 py-3.5 text-sm font-bold text-white shadow-sm">
-                   <UserIcon /> Akun Saya
-                 </a>
-                 <a href="/api/auth/logout" className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-bold text-red-600 shadow-sm">
-                   Keluar
-                 </a>
-               </>
-            ) : (
-              <>
-                <a href="/login" className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-bold text-navy-900 shadow-sm">
-                  <LoginIcon /> Masuk
-                </a>
-                <a href="/register" className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#b5852a] px-4 py-3.5 text-sm font-bold text-white shadow-sm">
-                  <UserPlusIcon /> Daftar
-                </a>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Navigation Bar Mobile */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full z-40 bg-[#16213E] border-t-4 border-[#C99738] flex justify-around items-center px-2 py-3 pb-safe">
-        {[
-          { href: '/', icon: HomeIcon },
-          { href: '/products', icon: BoxIcon },
-          { href: '/cart', icon: CartIcon },
-          { href: isLoggedIn ? '/customer' : '/login', icon: UserIcon },
-        ].map((item) => {
-          const active = checkIsActive(item.href)
-          return (
-            <a key={item.href} href={item.href} className={`flex flex-col items-center gap-1 transition-colors relative ${active ? 'text-[#C99738]' : 'text-gray-400 hover:text-white'}`}>
-              <item.icon />
-              {item.href === '/cart' && cartCount > 0 && (
-                <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
-                  {cartCount}
+          {/* KANAN: Ikon Actions & Profil */}
+          <div className="flex items-center gap-1 sm:gap-2 ml-auto md:ml-0 md:justify-self-end">
+            
+            <a href="https://wa.me/6281234567890" target="_blank" rel="noreferrer" className="relative hidden sm:flex h-10 w-10 items-center justify-center rounded-full text-navy-800 transition-all hover:bg-navy-50 hover:text-gold-700">
+              <Headphones />
+            </a>
+            
+            <a href="/cart" className="relative flex h-10 w-10 items-center justify-center rounded-full text-navy-800 transition-all hover:bg-navy-50 hover:text-gold-700 md:ml-0">
+              <ShoppingCart />
+              {cartCount > 0 && (
+                <span className="absolute -right-0.5 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-gold-500 px-1 text-[10px] font-bold text-navy-900 ring-2 ring-white">
+                  {cartCount > 99 ? '99+' : cartCount}
                 </span>
               )}
             </a>
-          )
-        })}
-      </div>
+
+            {/* Dropdown Profil Desktop */}
+            <div ref={profileRef} className="relative hidden md:block">
+              <button
+                type="button"
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className={`inline-flex h-11 items-center gap-2 rounded-full border px-5 text-[15px] font-bold transition-all ${
+                  isProfileOpen
+                    ? 'border-gold-500 bg-white text-gold-700 shadow-[0_8px_22px_-18px_rgba(15,27,45,0.8)]'
+                    : 'border-gray-300 bg-white text-navy-900 hover:border-gold-400 hover:text-gold-700 hover:bg-gray-50'
+                }`}
+              >
+                <User />
+                <span className="max-w-32 truncate">{isLoggedIn ? userName : 'Masuk'}</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isProfileOpen && (
+                <div className="absolute right-0 top-full mt-3 w-[360px] overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-[0_24px_70px_-34px_rgba(15,27,45,0.55)]">
+                  <div className="border-b border-navy-100 px-6 py-5 bg-gray-50/50">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-navy-400">
+                      {isLoggedIn ? 'Menu Akun' : 'Akses Akun'}
+                    </p>
+                    <p className="mt-2 text-sm font-medium leading-relaxed text-navy-900">
+                      {isLoggedIn ? 'Kelola profil, riwayat pesanan, dan transaksi Anda.' : 'Masuk untuk checkout dan menyimpan profil belanja.'}
+                    </p>
+                  </div>
+                  <div className="p-6">
+                    {isLoggedIn ? (
+                      <>
+                        <a href="/customer" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-navy-800 hover:bg-navy-50 transition-colors">
+                          <User className="h-4 w-4 text-gold-600" /> Akun Saya
+                        </a>
+                        <a href="/customer/orders" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-navy-800 hover:bg-navy-50 transition-colors">
+                          <ClipboardList /> Pesanan Saya
+                        </a>
+                        <a href="/api/auth/logout" className="mt-2 flex w-full items-center gap-3 rounded-xl border-t border-navy-100 px-3 py-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">
+                          <LogOut /> Keluar
+                        </a>
+                      </>
+                    ) : (
+                      <div className="flex flex-col gap-3">
+                        <a href="/login" className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#c99738] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#b38632] shadow-sm">
+                          <User /> Masuk
+                        </a>
+                        <a href="/register" className="flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-navy-900 transition-colors hover:bg-gray-50">
+                          <UserPlus /> Daftar
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Tombol Hamburger Mobile */}
+            <button type="button" onClick={() => setIsMenuOpen(true)} className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-navy-900 transition-colors hover:bg-navy-50 md:hidden">
+              <Menu />
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      {/* ================= DRAWER MENU MOBILE ================= */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-[10000] md:hidden">
+          <button type="button" className="absolute inset-0 bg-navy-900/45 backdrop-blur-sm cursor-default" onClick={() => setIsMenuOpen(false)} aria-label="Close menu" />
+          <aside className="absolute right-0 top-0 flex h-full w-[86vw] max-w-sm flex-col bg-white shadow-2xl transition-transform transform slide-in-from-right animate-in">
+            
+            <div className="flex h-16 items-center justify-between border-b border-navy-100 px-5">
+              <div className="flex items-center gap-3">
+                <div className="relative h-7 w-7">
+                  <img src="https://emas.pasdigi.id/images/logo-lm.png" alt="Logo Logam Mulia" className="w-full h-full object-contain" />
+                </div>
+                <span className="font-heading text-lg font-bold text-navy-900 font-serif">Logam Mulia</span>
+              </div>
+              <button onClick={() => setIsMenuOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-lg text-navy-700 hover:bg-navy-50 transition-colors">
+                <X />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              <div className="space-y-1">
+                {[
+                  { label: 'Katalog Produk', href: '/products', icon: PackageIcon },
+                  { label: 'Butik Fisik', href: '/boutiques', icon: MapPin },
+                  { label: 'Edukasi Emas', href: '/articles', icon: FileText }
+                ].map((item) => (
+                  <a key={item.href} href={item.href} className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-bold text-navy-800 hover:bg-navy-50 transition-colors">
+                    <span className="flex items-center gap-3"><item.icon /> {item.label}</span>
+                  </a>
+                ))}
+              </div>
+
+              <div className="mt-5 border-t border-navy-100 pt-4">
+                {isLoggedIn ? (
+                  <div className="space-y-1">
+                    <a href="/customer" className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-navy-800 hover:bg-navy-50 transition-colors"><User /> Akun Saya</a>
+                    <a href="/customer/orders" className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-navy-800 hover:bg-navy-50 transition-colors"><ClipboardList /> Pesanan Saya</a>
+                    <a href="/api/auth/logout" className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-red-600 transition-colors hover:bg-red-50 mt-2"><LogOut /> Keluar</a>
+                  </div>
+                ) : (
+                  <div className="grid gap-3">
+                    <a href="/login" className="flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold border border-navy-200 text-navy-800 hover:bg-navy-50 transition-colors">
+                      <User /> Masuk Akun
+                    </a>
+                    <a href="/register" className="flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-bold bg-[#c99738] text-white hover:bg-[#b38632] transition-colors shadow-sm">
+                      <UserPlus /> Daftar Akun Baru
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+          </aside>
+        </div>
+      )}
     </>
   )
 }
