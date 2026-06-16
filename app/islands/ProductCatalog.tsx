@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'hono/jsx'
 
 // Tipe data produk
 type Product = {
