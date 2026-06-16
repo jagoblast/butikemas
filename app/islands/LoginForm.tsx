@@ -25,12 +25,33 @@ export default function LoginForm() {
     setIsLoading(true)
 
     try {
-      // Simulasi panggilan API Backend
-      // const response = await fetch('/api/auth/login', { method: 'POST', ... })
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // 1. Tembak API Backend Hono kita
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      })
+
+      const data = await response.json()
+
+      // 2. Tangani jika respons backend gagal (email tidak ada atau password salah)
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Login gagal.')
+      }
       
-      // Jika berhasil, arahkan ke beranda (atau halaman akun)
-      window.location.href = '/'
+      // 3. Arahkan pengguna berdasarkan Role yang dikembalikan oleh backend
+      if (data.role === 'ADMIN' || data.role === 'SUPER_ADMIN') {
+        window.location.href = '/admin' // Masuk ke Dashboard Admin
+      } else {
+        // Jika role CUSTOMER, bisa diarahkan ke beranda atau halaman profil
+        window.location.href = '/' 
+      }
+
     } catch (err: any) {
       setError(err.message || 'Login gagal. Periksa kembali email dan password Anda.')
     } finally {
