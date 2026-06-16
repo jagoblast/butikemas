@@ -1,4 +1,5 @@
 import { jsxRenderer } from 'hono/jsx-renderer'
+import { Link, Script } from 'honox/server'
 
 export default jsxRenderer(({ children, title }) => {
   return (
@@ -6,25 +7,31 @@ export default jsxRenderer(({ children, title }) => {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{title ? `${title} | Admin Logam Mulia` : 'Admin Logam Mulia'}</title>
+        <title>{title ? `${title} | Admin Panel` : 'Admin Panel'}</title>
         
-        {/* WAJIB: Memanggil CSS Tailwind agar tidak berantakan */}
-        <link rel="stylesheet" href="/style.css" />
-        <script type="module" src="/app/client.ts"></script>
+        {/* Font Eksternal */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&family=JetBrains+Mono&display=swap" rel="stylesheet" />
+        
+        {/* WAJIB: Menggunakan komponen khusus dari honox/server agar Vite membundel CSS & Script */}
+        <Link rel="stylesheet" href="/app/style.css" />
+        <Script src="/app/client.ts" />
       </head>
       
-      {/* Background Shell Asli dari AdminShell.tsx */}
+      {/* Background Shell dari Repositori Induk (Tailwind Classes) */}
       <body className="antialiased min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,222,162,0.2),_transparent_32%),linear-gradient(180deg,_#f8f9fa_0%,_#eef1f4_100%)]">
         <div className="flex min-h-screen">
           
           {/* ========================================== */}
-          {/* SIDEBAR (Diambil dari AdminSidebar.tsx) */}
+          {/* SIDEBAR ADMIN */}
           {/* ========================================== */}
           <aside className="sticky top-0 h-screen w-72 border-r border-navy-100 bg-navy-900 flex-col transition-[width] duration-300 hidden sm:flex">
             
+            {/* Header Sidebar */}
             <div className="flex h-20 items-center justify-between border-b border-white/10 px-4">
               <a href="/admin" className="flex items-center gap-3 min-w-0">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-elevation-low">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm">
                   <img 
                     src="/images/logo-lm.png" 
                     alt="Logo Logam Mulia" 
@@ -38,8 +45,9 @@ export default jsxRenderer(({ children, title }) => {
               </a>
             </div>
 
+            {/* Menu Navigasi */}
             <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-              <a href="/admin" className="group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium bg-gold-400 text-navy-900 shadow-elevation-gold transition-all">
+              <a href="/admin" className="group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium bg-gold-400 text-navy-900 shadow-sm transition-all">
                 <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
                 <span>Dashboard</span>
               </a>
@@ -58,13 +66,12 @@ export default jsxRenderer(({ children, title }) => {
             </nav>
           </aside>
 
-
           {/* ========================================== */}
           {/* AREA KONTEN UTAMA */}
           {/* ========================================== */}
           <div className="min-w-0 flex-1 flex flex-col">
             
-            {/* TOPBAR (Diambil dari AdminTopbar.tsx) */}
+            {/* TOPBAR */}
             <header className="sticky top-0 z-30 border-b border-navy-100 bg-white/90 backdrop-blur-md">
               <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
                 
@@ -81,8 +88,8 @@ export default jsxRenderer(({ children, title }) => {
                     HonoX SSR Connected
                   </span>
 
-                  {/* Profil Topbar Asli */}
-                  <div className="flex items-center gap-2 rounded-xl border border-navy-100 bg-white px-2.5 py-2 shadow-elevation-low sm:px-3">
+                  {/* Profil Topbar */}
+                  <div className="flex items-center gap-2 rounded-xl border border-navy-100 bg-white px-2.5 py-2 shadow-sm sm:px-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gold-100 text-xs font-semibold text-gold-700">
                       AD
                     </div>
@@ -92,7 +99,6 @@ export default jsxRenderer(({ children, title }) => {
                   </div>
 
                   {/* Tombol Logout */}
-                  {/* Nantinya bisa diarahkan ke fungsi hapus cookie */}
                   <a href="/login" className="ml-1 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Keluar">
                     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                   </a>
@@ -101,7 +107,7 @@ export default jsxRenderer(({ children, title }) => {
               </div>
             </header>
 
-            {/* INJECTION HALAMAN (Diambil dari struktur main AdminShell) */}
+            {/* INJECTION HALAMAN (Menggunakan {children} secara murni) */}
             <main className="px-4 py-4 sm:px-6 lg:px-8 lg:py-6">
               {children}
             </main>
