@@ -1,7 +1,6 @@
 import { createRoute } from 'honox/factory'
 
 export default createRoute(async (c) => {
-  // Query Data Homepage Simulasi (Menggantikan getHomeData prisma)
   const { results: popularProducts } = await c.env.DB.prepare(
     'SELECT * FROM products WHERE is_active = 1 ORDER BY stock DESC LIMIT 4'
   ).all()
@@ -10,11 +9,9 @@ export default createRoute(async (c) => {
     'SELECT * FROM boutiques WHERE is_active = 1 LIMIT 4'
   ).all()
 
-  // Format Helper
-  const formatCurrency = (value: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(value)
+  const formatRupiah = (angka: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
   const currentDate = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date())
 
-  // Ikon Murni
   const ChevronRight = () => <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
   const ShieldCheck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.89 0 5.26 1 7 2a1 1 0 0 1 1 1v7z"/><path d="m9 12 2 2 4-4"/></svg>
   const TrendingUp = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
@@ -26,10 +23,10 @@ export default createRoute(async (c) => {
     <>
       <section className="overflow-hidden border-b border-gold-500/20 bg-navy-900">
         
-        {/* MOBILE VIDEO BACKGROUND (Identik dengan `page.tsx`) */}
+        {/* MOBILE VIDEO BACKGROUND */}
         <div className="relative min-h-[calc(100svh-4rem)] overflow-hidden md:hidden">
           <video autoPlay loop muted playsInline className="absolute inset-0 h-full w-full object-cover object-center">
-            <source src="/videos/home-hero-clean.mp4" type="video/mp4" />
+            <source src="https://emas.pasdigi.id/videos/home-hero-clean.mp4" type="video/mp4" />
           </video>
           <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-navy-950/85 via-navy-950/25 to-transparent" aria-hidden="true" />
           <div className="absolute inset-x-5 bottom-6">
@@ -40,7 +37,7 @@ export default createRoute(async (c) => {
           </div>
         </div>
 
-        {/* DESKTOP BACKGROUND (Identik dengan `page.tsx`) */}
+        {/* DESKTOP BACKGROUND */}
         <div className="relative isolate hidden overflow-hidden md:block">
           <img src="https://images.pexels.com/photos/321452/pexels-photo-321452.jpeg?auto=compress&cs=tinysrgb&w=1800" alt="" aria-hidden="true" className="absolute inset-0 -z-30 h-full w-full object-cover object-center opacity-55" />
           <div className="absolute inset-0 -z-20 bg-navy-950/72" aria-hidden="true" />
@@ -65,7 +62,7 @@ export default createRoute(async (c) => {
         </div>
       </section>
 
-      {/* HARGA LOGAM MULIA (Identik Murni) */}
+      {/* HARGA LOGAM MULIA */}
       <section id="harga-logam" className="container-main relative z-10 mt-8 md:-mt-16 md:mb-10">
         <div className="grid gap-6 lg:grid-cols-2">
           
@@ -81,7 +78,7 @@ export default createRoute(async (c) => {
               <div className="grid gap-3">
                 {/* Kartu Emas */}
                 <div className="relative overflow-hidden rounded-lg border p-5 shadow-sm border-gold-400/60 bg-[linear-gradient(135deg,#fff7db_0%,#f3c85f_42%,#8b650f_120%)]">
-                  <img src="/images/metal-gold.jpg" className="pointer-events-none absolute right-0 top-1/2 h-[130%] max-w-none -translate-y-1/2 object-contain opacity-20 w-[58%] rotate-6" />
+                  <img src="https://emas.pasdigi.id/images/metal-gold.jpg" className="pointer-events-none absolute right-0 top-1/2 h-[130%] max-w-none -translate-y-1/2 object-contain opacity-20 w-[58%] rotate-6" />
                   <div className="absolute inset-0 bg-white/10" aria-hidden="true" />
                   <div className="relative">
                     <div className="flex items-start justify-between gap-4">
@@ -103,7 +100,7 @@ export default createRoute(async (c) => {
 
                 {/* Kartu Perak */}
                 <div className="relative overflow-hidden rounded-lg border p-5 shadow-sm border-slate-300 bg-[linear-gradient(135deg,#ffffff_0%,#dce1e8_48%,#748091_120%)]">
-                  <img src="/images/metal-silver.png" className="pointer-events-none absolute right-0 top-1/2 h-[130%] max-w-none -translate-y-1/2 object-contain opacity-20 w-[48%]" />
+                  <img src="https://emas.pasdigi.id/images/metal-silver.png" className="pointer-events-none absolute right-0 top-1/2 h-[130%] max-w-none -translate-y-1/2 object-contain opacity-20 w-[48%]" />
                   <div className="absolute inset-0 bg-white/10" aria-hidden="true" />
                   <div className="relative">
                     <div className="flex items-start justify-between gap-4">
@@ -134,12 +131,12 @@ export default createRoute(async (c) => {
           </div>
 
           <div className="overflow-hidden rounded-2xl border border-navy-100 bg-white shadow-[0_18px_45px_-34px_rgba(15,27,45,0.5)]">
-            <img src="/images/banner-idul-fitri.webp" className="w-full h-full object-cover" />
+            <img src="https://emas.pasdigi.id/images/banner-idul-fitri.webp" className="w-full h-full object-cover" />
           </div>
         </div>
       </section>
 
-      {/* PRODUK TERPOPULER (Identik Murni) */}
+      {/* PRODUK TERPOPULER */}
       <section className="section-full mt-10">
         <div className="container-main">
           <div className="flex justify-between items-end mb-stack-md">
@@ -173,7 +170,7 @@ export default createRoute(async (c) => {
         </div>
       </section>
 
-      {/* BELI EMAS DI SINI (Identik Murni) */}
+      {/* BELI EMAS DI SINI */}
       <section className="bg-navy-900 section-full">
         <div className="container-main">
           <div className="text-center mb-stack-md">
@@ -200,31 +197,57 @@ export default createRoute(async (c) => {
         </div>
       </section>
 
-      {/* LOKASI BUTIK (Identik Murni) */}
+      {/* LOKASI BUTIK & WAWASAN */}
       <section className="section-full">
-        <div className="container-main">
-          <div className="flex justify-between items-end mb-stack-md">
-            <div>
-              <h2 className="section-heading">Lokasi Butik</h2>
-              <p className="text-navy-600 text-body-md mt-stack-sm">Kunjungi jaringan butik resmi kami di kota Anda.</p>
+        <div className="container-main space-y-16">
+          
+          <div>
+            <div className="flex justify-between items-end mb-stack-md">
+              <div>
+                <h2 className="section-heading">Lokasi Butik</h2>
+                <p className="text-navy-600 text-body-md mt-stack-sm">Kunjungi jaringan butik resmi kami di kota Anda.</p>
+              </div>
+              <a href="/boutiques" className="flex items-center gap-1 text-label-md text-gold-500 font-semibold hover:gap-2 transition-all pb-1">
+                Lihat Semua <ChevronRight />
+              </a>
             </div>
-            <a href="/boutiques" className="flex items-center gap-1 text-label-md text-gold-500 font-semibold hover:gap-2 transition-all pb-1">
-              Lihat Semua <ChevronRight />
-            </a>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {boutiques.map((b: any) => (
+                <a key={b.id} href={b.google_maps_url || '#'} className="card-surface p-4 flex flex-col hover:border-gold-400/50 transition-colors">
+                  <MapPin />
+                  <h5 className="font-bold text-navy-900 text-sm mt-3">{b.city}</h5>
+                  <p className="text-[11px] text-navy-600 mt-1">{b.address}</p>
+                </a>
+              ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {boutiques.map((b: any) => (
-              <a key={b.id} href={b.google_maps_url || '#'} className="card-surface p-4 flex flex-col hover:border-gold-400/50 transition-colors">
-                <MapPin />
-                <h5 className="font-bold text-navy-900 text-sm mt-3">{b.city}</h5>
-                <p className="text-[11px] text-navy-600 mt-1">{b.address}</p>
-              </a>
-            ))}
+          <div>
+            <h2 className="text-2xl font-bold text-navy-900 font-serif mb-6 border-b border-gray-100 pb-4">Wawasan Investasi</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { title: 'Kurban Nanti, Siapinnya Bisa dari Sekarang Lewat Nabung Emas', img: 'https://emas.pasdigi.id/images/banner-2.png' },
+                { title: 'Buyback Emas ANTAM: Harga Ngikut Hari Transaksi, Bukan Tahun Produksi', img: 'https://emas.pasdigi.id/images/banner-3.jpg' },
+                { title: 'Gempita Hari Raya Idul Fitri 1447 H / 2026', img: 'https://emas.pasdigi.id/images/banner-idul-fitri.webp' }
+              ].map((a, i) => (
+                <a key={i} href="/articles" className="block border border-gray-200 rounded-2xl overflow-hidden group hover:shadow-lg transition-shadow">
+                  <div className="aspect-[16/10] overflow-hidden relative">
+                    <span className="absolute top-3 left-3 bg-[#0f172a] text-white text-[10px] font-bold px-2 py-1 rounded z-10">ARTIKEL</span>
+                    <img src={a.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-navy-900 text-base mb-2 group-hover:text-[#C99738] transition-colors line-clamp-2">{a.title}</h3>
+                    <p className="text-xs text-gray-500 mb-4 line-clamp-2">Banyak orang punya niat untuk berkurban saat Hari Raya Iduladha. Tapi jujur aja, kadang persiapannya baru...</p>
+                    <span className="text-xs font-bold text-[#C99738]">Baca Selengkapnya &gt;</span>
+                  </div>
+                </a>
+              ))}
+            </div>
           </div>
+
         </div>
       </section>
-
     </>
   )
 })
