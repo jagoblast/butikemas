@@ -1,5 +1,4 @@
 import { jsxRenderer } from 'hono/jsx-renderer'
-import { Link } from 'hono/jsx'
 
 // Ini akan membungkus SEMUA halaman di dalam folder app/routes/
 export default jsxRenderer(({ children, title }) => {
@@ -17,14 +16,15 @@ export default jsxRenderer(({ children, title }) => {
         {/* Navbar Statis (Render di Server, tanpa beban JS di browser) */}
         <header className="bg-white shadow-sm sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-yellow-600">
+            {/* Menggunakan tag <a> standar alih-alih <Link> */}
+            <a href="/" className="text-2xl font-bold text-yellow-600">
               Logam Mulia
-            </Link>
-            <nav className="flex gap-4">
-              <Link href="/products" className="text-gray-600 hover:text-black">Katalog</Link>
-              <Link href="/login" className="px-4 py-2 bg-yellow-500 text-white rounded font-medium hover:bg-yellow-600">
+            </a>
+            <nav className="flex gap-4 items-center">
+              <a href="/products" className="text-gray-600 hover:text-black font-medium">Katalog</a>
+              <a href="/login" className="px-4 py-2 bg-yellow-500 text-white rounded font-medium hover:bg-yellow-600 transition">
                 Masuk
-              </Link>
+              </a>
             </nav>
           </div>
         </header>
