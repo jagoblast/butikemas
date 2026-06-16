@@ -1,133 +1,215 @@
-import { useState } from 'hono/jsx'
+import { useState, useRef, useEffect } from 'hono/jsx'
 
-export default function ProductCatalog({ initialProducts, categories }: { initialProducts: any[], categories: any[] }) {
-  const [search, setSearch] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('ALL')
-  const [sortBy, setSortBy] = useState('newest')
-
-  // Logika Filter & Sorting
-  let filteredProducts = initialProducts.filter(p => {
-    const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
-    const matchCategory = selectedCategory === 'ALL' || p.category_id === selectedCategory
-    return matchSearch && matchCategory
-  })
-
-  if (sortBy === 'price_asc') {
-    filteredProducts.sort((a, b) => a.price - b.price)
-  } else if (sortBy === 'price_desc') {
-    filteredProducts.sort((a, b) => b.price - a.price)
+// Helper Format
+const formatRupiah = (angka: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
+function formatCount(value: number) {
+  if (value >= 1000) {
+    const compact = value / 1000
+    return `${compact % 1 === 0 ? compact.toFixed(0) : compact.toFixed(1).replace('.', ',')}rb`
   }
+  return String(value)
+}
+
+// Ikon Murni 
+const SearchIcon = ({ className }: { className?: string }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+const ArrowUpDown = ({ className }: { className?: string }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+const Check = ({ className }: { className?: string }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M20 6 9 17l-5-5"/></svg>
+const Star = ({ className }: { className?: string }) => <svg className={className} fill="currentColor" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+const BadgePercent = ({ className }: { className?: string }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg>
+
+const SORT_OPTIONS = [
+  { value: 'bestseller', label: 'Terlaris' },
+  { value: 'newest',     label: 'Terbaru' },
+  { value: 'price-desc', label: 'Harga Tertinggi' },
+  { value: 'price-asc',  label: 'Harga Terendah' },
+]
+
+export default function ProductCatalog({ initialProducts, categories: rawCategories }: { initialProducts: any[], categories: any[] }) {
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('all')
+  const [sort, setSort] = useState('bestseller')
+  const [sortOpen, setSortOpen] = useState(false)
+  const sortRef = useRef<HTMLDivElement>(null)
+
+  const categories = [
+    { value: 'all', label: 'Semua' },
+    ...rawCategories.map((c) => ({ value: c.id, label: c.name }))
+  ]
+
+  useEffect(() => {
+    function handleOutside(e: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleOutside)
+    return () => document.removeEventListener('mousedown', handleOutside)
+  }, [])
+
+  const filtered = initialProducts
+    .filter((p) => category === 'all' || p.category_id === category)
+    .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
+    .sort((a, b) => {
+      // Mocking promo logic for sorting just like the API would
+      const priceA = a.price
+      const priceB = b.price
+      if (sort === 'price-asc') return priceA - priceB
+      if (sort === 'price-desc') return priceB - priceA
+      if (sort === 'bestseller') return (b.stock + 1200) - (a.stock + 1200) // Mock sold count
+      if (sort === 'newest') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      return 0
+    })
 
   return (
-    <div className="flex flex-col md:flex-row gap-8">
-      
-      {/* ========================================== */}
-      {/* SIDEBAR FILTER */}
-      {/* ========================================== */}
-      <aside className="w-full md:w-64 shrink-0 space-y-6">
-        
-        {/* Pencarian */}
-        <div>
-          <label className="block text-sm font-bold text-navy-900 mb-2">Cari Produk</label>
-          <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Cari emas..." 
-              value={search}
-              onInput={(e: any) => setSearch(e.target.value)}
-              className="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-gold-400 outline-none transition-all shadow-sm"
-            />
-            <svg className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-          </div>
-        </div>
+    <section className="min-w-0 overflow-x-hidden">
+      {/* Search Bar */}
+      <div className="relative mb-5">
+        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-navy-400 pointer-events-none" />
+        <input
+          id="product-search"
+          type="text"
+          placeholder="Cari koleksi emas..."
+          value={search}
+          onInput={(e: any) => setSearch(e.target.value)}
+          className="w-full pl-11 pr-4 py-3.5 bg-white border border-navy-200 rounded-2xl text-sm text-navy-900 placeholder:text-navy-400 focus:outline-none focus:ring-2 focus:ring-gold-400 focus:border-transparent transition-all shadow-sm"
+        />
+      </div>
 
-        {/* Kategori */}
-        <div>
-          <label className="block text-sm font-bold text-navy-900 mb-3">Kategori</label>
-          <div className="flex flex-col gap-2">
-            <button 
-              onClick={() => setSelectedCategory('ALL')}
-              className={`text-left px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedCategory === 'ALL' ? 'bg-navy-900 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-            >
-              Semua Produk
-            </button>
+      <div className="mb-6 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar" role="tablist">
             {categories.map((cat) => (
-              <button 
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`text-left px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedCategory === cat.id ? 'bg-navy-900 text-white shadow-sm' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+              <button
+                key={cat.value}
+                role="tab"
+                aria-selected={category === cat.value}
+                onClick={() => setCategory(cat.value)}
+                className={`flex-shrink-0 text-sm font-semibold px-4 py-2 rounded-full border transition-all duration-200 ${
+                  category === cat.value
+                    ? 'bg-[#D4A84B] text-navy-900 border-[#D4A84B] shadow-sm'
+                    : 'bg-white text-navy-600 border-navy-200 hover:border-[#D4A84B] hover:text-navy-900'
+                }`}
               >
-                {cat.name}
+                {cat.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Urutkan Berdasarkan */}
-        <div>
-          <label className="block text-sm font-bold text-navy-900 mb-3">Urutkan Harga</label>
-          <select 
-            value={sortBy}
-            onChange={(e: any) => setSortBy(e.target.value)}
-            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-gold-400 outline-none transition-all shadow-sm cursor-pointer"
+        <div className="relative w-full shrink-0 sm:w-auto" ref={sortRef}>
+          <button
+            onClick={() => setSortOpen(!sortOpen)}
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-full border border-navy-200 bg-white px-3 text-sm font-semibold text-navy-700 shadow-sm transition-colors hover:border-gold-400 hover:text-navy-900 sm:w-auto"
           >
-            <option value="newest">Terbaru</option>
-            <option value="price_asc">Harga Terendah</option>
-            <option value="price_desc">Harga Tertinggi</option>
-          </select>
+            <ArrowUpDown className="w-4 h-4" />
+            Urutkan
+          </button>
+
+          {sortOpen && (
+            <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-full overflow-hidden rounded-xl border border-navy-200 bg-white shadow-lg animate-in sm:min-w-[180px]">
+              {SORT_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => { setSort(opt.value); setSortOpen(false) }}
+                  className={`w-full flex items-center justify-between px-4 py-3 text-sm text-left transition-colors ${
+                    sort === opt.value ? 'bg-gold-50 text-gold-700 font-semibold' : 'text-navy-700 hover:bg-navy-50'
+                  }`}
+                >
+                  {opt.label}
+                  {sort === opt.value && <Check className="w-4 h-4 text-gold-500" />}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
 
-      </aside>
+      {/* Grid Produk */}
+      {filtered.length === 0 ? (
+        <div className="text-center py-20 text-navy-400">
+          <SearchIcon className="w-12 h-12 mx-auto mb-3 opacity-30" />
+          <p className="font-medium text-navy-600">Produk tidak ditemukan</p>
+          <p className="text-sm mt-1">Coba kata kunci atau kategori yang berbeda</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filtered.map((product, index) => {
+            const isOutOfStock = product.stock === 0
+            // Simulasi Promo: Anggap produk ke-2 (index 1) sedang promo agar desain shadow emasnya terlihat
+            const hasVoucherPrice = index === 1 
+            const originalPrice = product.price + 500000
+            const displayRating = Number(product.display_rating) || 5
+            const soldCount = product.stock + 1200 // Mock
 
-      {/* ========================================== */}
-      {/* GRID PRODUK */}
-      {/* ========================================== */}
-      <div className="flex-1">
-        {filteredProducts.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center shadow-sm">
-            <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-            <h3 className="text-lg font-bold text-navy-900 mb-1">Produk Tidak Ditemukan</h3>
-            <p className="text-gray-500 text-sm">Coba gunakan kata kunci pencarian atau kategori lain.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map((product) => (
-              <a href={`/products/${product.slug}`} key={product.id} className="group bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gold-300 transition-all duration-300 flex flex-col h-full">
-                
-                {/* Gambar Produk */}
-                <div className="aspect-square bg-gray-50 relative p-6 flex items-center justify-center border-b border-gray-100 overflow-hidden">
-                  <img 
-                    src={product.image_url || 'https://emas.pasdigi.id/images/lm.png'} 
-                    alt={product.name} 
-                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 drop-shadow-sm" 
-                  />
-                  {product.stock <= 0 && (
-                    <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg shadow-sm">
-                      Habis
+            return (
+              <article
+                key={product.id}
+                className={`group overflow-hidden rounded-2xl border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+                  hasVoucherPrice
+                    ? 'border-2 border-gold-400 bg-[linear-gradient(180deg,#FFF1C2_0%,#FFFFFF_44%,#FFF9EA_100%)] shadow-[0_18px_42px_-18px_rgba(212,168,75,0.9)] ring-2 ring-gold-100/90 hover:shadow-[0_22px_52px_-18px_rgba(184,145,47,0.95)]'
+                    : 'border-navy-100/80 hover:shadow-navy-100/70'
+                }`}
+              >
+                <a href={`/products/${product.slug}`} className="block">
+                  <div className="relative aspect-square bg-navy-900 overflow-hidden">
+                    <img
+                      src={product.image_url || 'https://emas.pasdigi.id/images/metal-gold.jpg'}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className={`absolute right-3 top-3 truncate rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-navy-900 shadow-sm ${hasVoucherPrice ? 'max-w-[58%]' : 'max-w-[75%]'}`}>
+                      {product.category_name || 'Kategori'}
                     </div>
-                  )}
-                </div>
+                    {hasVoucherPrice && (
+                      <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-r from-gold-500 via-gold-400 to-gold-300 px-3 py-2 text-[11px] font-extrabold uppercase text-navy-900 shadow-lg shadow-navy-900/20">
+                        <span className="inline-flex items-center gap-1"><BadgePercent className="h-3.5 w-3.5" /> Promo</span>
+                        <span className="shrink-0 rounded-full bg-white/90 px-2 py-0.5 text-[10px] text-[#2E7D32]">-Rp 500Rb</span>
+                      </div>
+                    )}
+                    {isOutOfStock && (
+                      <div className="absolute inset-0 bg-navy-900/60 backdrop-blur-sm flex items-center justify-center">
+                        <span className="text-sm font-semibold text-white bg-navy-900 px-3 py-1.5 rounded-full">Stok Habis</span>
+                      </div>
+                    )}
+                  </div>
 
-                {/* Detail Produk */}
-                <div className="p-5 flex flex-col flex-1">
-                  <p className="text-xs font-bold text-gold-600 mb-1 tracking-wider uppercase">{product.kadar || '99.99%'}</p>
-                  <h3 className="text-navy-900 font-bold text-base mb-1 line-clamp-2 group-hover:text-gold-600 transition-colors">{product.name}</h3>
-                  <p className="text-gray-500 text-sm mb-4">{product.weight_gram} Gram</p>
-                  
-                  <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
-                    <span className="text-lg font-bold text-navy-900">
-                      Rp {product.price.toLocaleString('id-ID')}
-                    </span>
-                    <div className="w-8 h-8 rounded-full bg-navy-50 flex items-center justify-center text-navy-600 group-hover:bg-gold-400 group-hover:text-navy-900 transition-colors">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                  <div className="p-3.5 space-y-1.5">
+                    <div className="flex items-center justify-between w-full pb-1 pt-1">
+                      <div className="flex items-center gap-1.5">
+                        <Star className="w-3.5 h-3.5 text-gold-500" />
+                        <span className="text-xs font-bold text-navy-900">{displayRating.toFixed(1)}</span>
+                        <span className="text-[11px] font-medium text-navy-500">({product.review_count || 0})</span>
+                      </div>
+                      <span className="rounded-full bg-navy-50 px-2 py-0.5 text-[11px] font-semibold text-navy-700">
+                        {formatCount(soldCount)} terjual
+                      </span>
+                    </div>
+
+                    <h3 className="font-heading font-semibold text-navy-900 text-sm leading-snug line-clamp-2">
+                      {product.name}
+                    </h3>
+
+                    <div className={`pt-1 flex flex-col justify-end min-h-[40px] ${hasVoucherPrice ? 'px-0.5' : ''}`}>
+                      {hasVoucherPrice ? (
+                        <p className="mb-1 text-[11px] font-semibold leading-tight text-[#888888] line-through">
+                          {formatRupiah(originalPrice)}
+                        </p>
+                      ) : (
+                        <div className="h-[11px] mb-0.5" aria-hidden="true" />
+                      )}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <p className="text-[18px] font-extrabold text-gold-700 leading-tight">
+                          {formatRupiah(product.price)}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </a>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+                </a>
+              </article>
+            )
+          })}
+        </div>
+      )}
+    </section>
   )
 }
