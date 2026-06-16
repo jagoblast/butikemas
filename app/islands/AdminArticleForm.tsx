@@ -10,8 +10,6 @@ export default function AdminArticleForm({ initialData }: { initialData?: any })
     content: initialData?.content || '',
     cover_url: initialData?.cover_url || '',
     is_published: initialData?.is_published !== undefined ? initialData.is_published : 1,
-    // author_id biasanya disuntikkan di sisi backend/API melalui session, 
-    // namun jika API Anda membutuhkannya dari payload:
     author_id: initialData?.author_id || 'admin-id' 
   })
 
@@ -35,27 +33,36 @@ export default function AdminArticleForm({ initialData }: { initialData?: any })
     e.preventDefault()
     setStatus({ type: 'loading', message: 'Menyimpan artikel...' })
 
+    // Sesuaikan endpoint dengan struktur API Anda (misal: /api/articles atau /api/admin/articles)
     const url = isEditMode ? `/api/admin/articles/${initialData.id}` : '/api/admin/articles'
     const method = isEditMode ? 'PUT' : 'POST'
 
     try {
+      // Ambil token admin dari localStorage (Ganti 'token' dengan key yang Anda gunakan di project)
+      const token = localStorage.getItem('token') || localStorage.getItem('admin_token') || ''
+
       const res = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // KUNCI UTAMA MENGATASI 401
+        },
+        credentials: 'include', // Tambahkan ini jika auth Anda berbasis HttpOnly Cookie
         body: JSON.stringify(formData)
       })
+      
       const data = await res.json()
 
-      if (res.ok && data.success) {
+      if (res.ok) {
         setStatus({ type: 'success', message: 'Artikel berhasil disimpan!' })
         if (!isEditMode) {
           window.location.href = '/admin/articles'
         }
       } else {
-        setStatus({ type: 'error', message: data.message || 'Gagal menyimpan artikel.' })
+        setStatus({ type: 'error', message: data.message || 'Gagal menyimpan artikel (Error 401/500).' })
       }
     } catch (err) {
-      setStatus({ type: 'error', message: 'Terjadi kesalahan sistem.' })
+      setStatus({ type: 'error', message: 'Terjadi kesalahan jaringan.' })
     }
   }
 
@@ -98,9 +105,8 @@ export default function AdminArticleForm({ initialData }: { initialData?: any })
           />
         </div>
 
-        {/* Menggunakan cover_url */}
         <div>
-          <label className="block text-sm font-bold text-navy-900 mb-1.5">URL Gambar Cover (cover_url)</label>
+          <label className="block text-sm font-bold text-navy-900 mb-1.5">URL Gambar Cover</label>
           <input 
             name="cover_url" 
             type="text" 
@@ -116,7 +122,6 @@ export default function AdminArticleForm({ initialData }: { initialData?: any })
           )}
         </div>
 
-        {/* Field Excerpt Sesuai Schema */}
         <div>
           <label className="block text-sm font-bold text-navy-900 mb-1.5">Kutipan Singkat (Excerpt)</label>
           <textarea 
