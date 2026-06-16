@@ -31,13 +31,32 @@ export default function RegisterForm() {
     setIsLoading(true)
 
     try {
-      // Simulasi API loading
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // 1. Tembak API Backend Hono kita
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password
+        })
+      })
+
+      const data = await response.json()
+
+      // 2. Tangani jika respons backend gagal (misal: email sudah terdaftar)
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Registrasi gagal')
+      }
       
-      // Redirect setelah sukses
-      window.location.href = '/'
+      // 3. Redirect ke halaman login setelah berhasil mendaftar
+      window.location.href = '/login?registered=true'
+      
     } catch (err: any) {
-      setError(err.message || 'Registrasi gagal. Coba lagi sebentar.')
+      setError(err.message || 'Terjadi kesalahan sistem. Coba lagi.')
     } finally {
       setIsLoading(false)
     }
