@@ -1,8 +1,12 @@
 import { jsxRenderer } from 'hono/jsx-renderer'
 import { Link, Script } from 'honox/server'
 import PublicNavbar from '../islands/PublicNavbar'
+import BottomBar from '../islands/BottomBar' // 1. Import BottomBar
 
-export default jsxRenderer(({ children, title }) => {
+// 2. Tambahkan parameter 'c' untuk mengambil request dari server
+export default jsxRenderer(({ children, title }, c) => {
+  const currentPath = c.req.path // Ambil path saat ini di sisi server
+
   return (
     <html lang="id">
       <head>
@@ -17,7 +21,8 @@ export default jsxRenderer(({ children, title }) => {
       </head>
       <body className="flex flex-col min-h-screen bg-gray-50 antialiased font-sans text-navy-900 pb-16 md:pb-0">
         
-        <PublicNavbar />
+        {/* 3. Lempar currentPath ke Navbar agar link active berfungsi saat SSR */}
+        <PublicNavbar currentPath={currentPath} />
 
         <main className="flex-grow w-full">
           {children}
@@ -78,6 +83,10 @@ export default jsxRenderer(({ children, title }) => {
             </div>
           </div>
         </footer>
+
+        {/* 4. Letakkan BottomBar di sini agar selalu muncul di layar HP */}
+        <BottomBar currentPath={currentPath} />
+
       </body>
     </html>
   )
