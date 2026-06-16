@@ -2,9 +2,9 @@ import { createRoute } from 'honox/factory'
 import AdminArticleList from '../../../islands/AdminArticleList'
 
 export default createRoute(async (c) => {
-  // Ambil daftar artikel langsung dari D1 Edge Database
+  // MENGGUNAKAN cover_url SESUAI SCHEMA
   const { results: articles } = await c.env.DB.prepare(
-    'SELECT id, title, slug, image_url, is_published, created_at FROM articles ORDER BY created_at DESC'
+    'SELECT id, title, slug, cover_url, is_published, created_at FROM articles ORDER BY created_at DESC'
   ).all()
 
   return c.render(
