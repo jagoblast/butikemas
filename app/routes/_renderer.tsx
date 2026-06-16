@@ -1,4 +1,6 @@
 import { jsxRenderer } from 'hono/jsx-renderer'
+// 1. Tambahkan impor Link dan Script dari honox/server
+import { Link, Script } from 'honox/server'
 
 // Ini akan membungkus SEMUA halaman di dalam folder app/routes/
 export default jsxRenderer(({ children, title }) => {
@@ -8,15 +10,18 @@ export default jsxRenderer(({ children, title }) => {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{title ? `${title} | Logam Mulia Edge` : 'Logam Mulia Edge'}</title>
-        <link rel="stylesheet" href="/style.css" />
-        {/* Script ini hanya untuk menghidupkan 'Islands' */}
-        <script type="module" src="/app/client.ts"></script>
+        
+        {/* 2. Gunakan komponen Link dari HonoX dan arahkan ke path /app/style.css */}
+        <Link rel="stylesheet" href="/app/style.css" />
+        
+        {/* 3. Gunakan komponen Script dari HonoX untuk menghidupkan 'Islands' */}
+        <Script src="/app/client.ts" />
       </head>
       <body className="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
         {/* Navbar Statis (Render di Server, tanpa beban JS di browser) */}
         <header className="bg-white shadow-sm sticky top-0 z-50">
           <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-            {/* Menggunakan tag <a> standar alih-alih <Link> */}
+            {/* Menggunakan tag <a> standar alih-alih router Link (karena ini MPA) */}
             <a href="/" className="text-2xl font-bold text-yellow-600">
               Logam Mulia
             </a>
