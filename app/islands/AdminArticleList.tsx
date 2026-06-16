@@ -11,11 +11,20 @@ export default function AdminArticleList({ initialArticles }: { initialArticles:
     if (!confirm(`Apakah Anda yakin ingin menghapus artikel "${title}"?`)) return
 
     try {
-      const res = await fetch(`/api/admin/articles/${id}`, { method: 'DELETE' })
+      const token = localStorage.getItem('token') || localStorage.getItem('admin_token') || ''
+      
+      const res = await fetch(`/api/admin/articles/${id}`, { 
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}` // KUNCI UTAMA
+        },
+        credentials: 'include'
+      })
+      
       if (res.ok) {
         setArticles(articles.filter(a => a.id !== id))
       } else {
-        alert("Gagal menghapus artikel.")
+        alert("Gagal menghapus artikel (Error 401/500).")
       }
     } catch (err) {
       alert("Terjadi kesalahan jaringan.")
@@ -49,7 +58,6 @@ export default function AdminArticleList({ initialArticles }: { initialArticles:
               <td className="px-6 py-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 overflow-hidden shrink-0">
-                    {/* Menggunakan cover_url */}
                     {article.cover_url ? (
                       <img src={article.cover_url} alt="Cover" className="w-full h-full object-cover" />
                     ) : (
