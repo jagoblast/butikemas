@@ -6,14 +6,17 @@ export default function AdminArticleForm({ initialData }: { initialData?: any })
   const [formData, setFormData] = useState({
     title: initialData?.title || '',
     slug: initialData?.slug || '',
+    excerpt: initialData?.excerpt || '',
     content: initialData?.content || '',
-    image_url: initialData?.image_url || '',
+    cover_url: initialData?.cover_url || '',
     is_published: initialData?.is_published !== undefined ? initialData.is_published : 1,
+    // author_id biasanya disuntikkan di sisi backend/API melalui session, 
+    // namun jika API Anda membutuhkannya dari payload:
+    author_id: initialData?.author_id || 'admin-id' 
   })
 
   const [status, setStatus] = useState<{ type: 'error' | 'success' | 'loading' | '', message: string }>({ type: '', message: '' })
 
-  // Auto-generate Slug based on Title
   const handleTitleChange = (e: any) => {
     const title = e.target.value
     const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
@@ -95,21 +98,35 @@ export default function AdminArticleForm({ initialData }: { initialData?: any })
           />
         </div>
 
+        {/* Menggunakan cover_url */}
         <div>
-          <label className="block text-sm font-bold text-navy-900 mb-1.5">URL Gambar Cover</label>
+          <label className="block text-sm font-bold text-navy-900 mb-1.5">URL Gambar Cover (cover_url)</label>
           <input 
-            name="image_url" 
+            name="cover_url" 
             type="text" 
-            value={formData.image_url} 
+            value={formData.cover_url} 
             onInput={handleChange} 
             placeholder="https://emas.pasdigi.id/images/banner-2.png"
             className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-gold-400 outline-none transition-all" 
           />
-          {formData.image_url && (
+          {formData.cover_url && (
             <div className="mt-3 w-48 h-28 rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
-              <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
+              <img src={formData.cover_url} alt="Preview" className="w-full h-full object-cover" />
             </div>
           )}
+        </div>
+
+        {/* Field Excerpt Sesuai Schema */}
+        <div>
+          <label className="block text-sm font-bold text-navy-900 mb-1.5">Kutipan Singkat (Excerpt)</label>
+          <textarea 
+            name="excerpt" 
+            value={formData.excerpt} 
+            onInput={handleChange} 
+            rows={3} 
+            placeholder="Ringkasan atau kalimat pembuka artikel yang menarik..."
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-gold-400 outline-none transition-all resize-none"
+          ></textarea>
         </div>
 
         <div>
@@ -120,7 +137,7 @@ export default function AdminArticleForm({ initialData }: { initialData?: any })
             onInput={handleChange} 
             required 
             rows={10} 
-            placeholder="Tulis isi artikel di sini..."
+            placeholder="Tulis isi artikel lengkap di sini..."
             className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-gold-400 outline-none transition-all resize-y"
           ></textarea>
         </div>
