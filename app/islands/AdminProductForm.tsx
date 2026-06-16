@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'hono/jsx'
 
 export default function AdminProductForm() {
   const [formData, setFormData] = useState({
