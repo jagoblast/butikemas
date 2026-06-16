@@ -20,14 +20,10 @@ export default function PublicNavbar() {
   const [isAuthOpen, setIsAuthOpen] = useState(false)
   const [cartCount, setCartCount] = useState(0)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  
-  // State untuk menyimpan URL agar aman dari SSR error
   const [currentPath, setCurrentPath] = useState('')
-  
   const authRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    // Jalankan ini hanya di sisi klien (Browser)
     setCurrentPath(window.location.pathname)
     setIsLoggedIn(document.cookie.includes('customer_session='))
     
@@ -147,7 +143,6 @@ export default function PublicNavbar() {
                 )}
               </div>
 
-              {/* Tombol Hamburger Mobile Saja */}
               <button onClick={() => setIsMobileMenuOpen(true)} className="md:hidden text-navy-900">
                 <MenuIcon />
               </button>
