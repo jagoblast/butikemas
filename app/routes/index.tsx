@@ -1,18 +1,25 @@
 import { createRoute } from 'honox/factory'
 
 export default createRoute(async (c) => {
-  const { results: popularProducts } = await c.env.DB.prepare(
-    'SELECT * FROM products WHERE is_active = 1 ORDER BY stock DESC LIMIT 4'
-  ).all()
+  // KOREKSI Kueri: Tambahkan Subquery untuk mengambil image_url dari product_images
+  const { results: popularProducts } = await c.env.DB.prepare(`
+    SELECT p.*, 
+      (SELECT image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY is_primary DESC LIMIT 1) as image_url
+    FROM products p 
+    WHERE p.is_active = 1 
+    ORDER BY p.stock DESC 
+    LIMIT 4
+  `).all()
 
   const { results: boutiques } = await c.env.DB.prepare(
     'SELECT * FROM boutiques WHERE is_active = 1 LIMIT 4'
   ).all()
 
-  // Helper yang benar
+  // Helper Format
   const formatRupiah = (angka: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
   const currentDate = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date())
 
+  // Ikon Murni
   const ChevronRight = () => <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
   const ShieldCheck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.89 0 5.26 1 7 2a1 1 0 0 1 1 1v7z"/><path d="m9 12 2 2 4-4"/></svg>
   const TrendingUp = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
@@ -24,6 +31,7 @@ export default createRoute(async (c) => {
     <>
       <section className="overflow-hidden border-b border-gold-500/20 bg-navy-900">
         
+        {/* MOBILE VIDEO BACKGROUND */}
         <div className="relative min-h-[calc(100svh-4rem)] overflow-hidden md:hidden">
           <video autoPlay loop muted playsInline className="absolute inset-0 h-full w-full object-cover object-center">
             <source src="https://emas.pasdigi.id/videos/home-hero-clean.mp4" type="video/mp4" />
@@ -37,6 +45,7 @@ export default createRoute(async (c) => {
           </div>
         </div>
 
+        {/* DESKTOP BACKGROUND */}
         <div className="relative isolate hidden overflow-hidden md:block">
           <img src="https://images.pexels.com/photos/321452/pexels-photo-321452.jpeg?auto=compress&cs=tinysrgb&w=1800" alt="" aria-hidden="true" className="absolute inset-0 -z-30 h-full w-full object-cover object-center opacity-55" />
           <div className="absolute inset-0 -z-20 bg-navy-950/72" aria-hidden="true" />
@@ -61,6 +70,7 @@ export default createRoute(async (c) => {
         </div>
       </section>
 
+      {/* HARGA LOGAM MULIA */}
       <section id="harga-logam" className="container-main relative z-10 mt-8 md:-mt-16 md:mb-10">
         <div className="grid gap-6 lg:grid-cols-2">
           
@@ -74,6 +84,7 @@ export default createRoute(async (c) => {
 
             <div className="flex flex-1 flex-col p-5 sm:p-6">
               <div className="grid gap-3">
+                {/* Kartu Emas */}
                 <div className="relative overflow-hidden rounded-lg border p-5 shadow-sm border-gold-400/60 bg-[linear-gradient(135deg,#fff7db_0%,#f3c85f_42%,#8b650f_120%)]">
                   <img src="https://emas.pasdigi.id/images/metal-gold.jpg" className="pointer-events-none absolute right-0 top-1/2 h-[130%] max-w-none -translate-y-1/2 object-contain opacity-20 w-[58%] rotate-6" />
                   <div className="absolute inset-0 bg-white/10" aria-hidden="true" />
@@ -95,6 +106,7 @@ export default createRoute(async (c) => {
                   </div>
                 </div>
 
+                {/* Kartu Perak */}
                 <div className="relative overflow-hidden rounded-lg border p-5 shadow-sm border-slate-300 bg-[linear-gradient(135deg,#ffffff_0%,#dce1e8_48%,#748091_120%)]">
                   <img src="https://emas.pasdigi.id/images/metal-silver.png" className="pointer-events-none absolute right-0 top-1/2 h-[130%] max-w-none -translate-y-1/2 object-contain opacity-20 w-[48%]" />
                   <div className="absolute inset-0 bg-white/10" aria-hidden="true" />
@@ -132,6 +144,7 @@ export default createRoute(async (c) => {
         </div>
       </section>
 
+      {/* PRODUK TERPOPULER */}
       <section className="section-full mt-10">
         <div className="container-main">
           <div className="flex justify-between items-end mb-stack-md">
@@ -155,7 +168,6 @@ export default createRoute(async (c) => {
                 <div className="space-y-1 mt-3">
                   {p.stock < 10 && <span className="certified-stamp">Stok Terbatas</span>}
                   <h3 className="font-bold text-sm text-navy-900 truncate">{p.name}</h3>
-                  {/* Pemanggilan yang sudah dikoreksi */}
                   {i === 1 && <p className="text-[10px] font-semibold text-[#888888] line-through">{formatRupiah(p.price + 500000)}</p>}
                   <p className={`text-gold-400 font-bold text-sm ${i === 1 ? 'text-gold-700 font-extrabold' : ''}`}>{formatRupiah(p.price)}</p>
                   <p className="text-[10px] text-navy-600/70 font-medium">{p.stock + 1240} terjual</p>
@@ -166,6 +178,7 @@ export default createRoute(async (c) => {
         </div>
       </section>
 
+      {/* BELI EMAS DI SINI */}
       <section className="bg-navy-900 section-full">
         <div className="container-main">
           <div className="text-center mb-stack-md">
@@ -192,6 +205,7 @@ export default createRoute(async (c) => {
         </div>
       </section>
 
+      {/* LOKASI BUTIK & WAWASAN */}
       <section className="section-full">
         <div className="container-main space-y-16">
           
