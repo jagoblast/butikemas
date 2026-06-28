@@ -1,4 +1,5 @@
 import { createRoute } from 'honox/factory'
+import { getCookie } from 'hono/cookie' // <-- 1. Tambahkan import getCookie
 import ProductDetailActions from '../../islands/ProductDetailActions'
 
 export default createRoute(async (c) => {
@@ -53,6 +54,9 @@ export default createRoute(async (c) => {
     WHERE p.category_id = ? AND p.id != ? AND p.is_active = 1
     LIMIT 4
   `).bind(product.category_id, product.id).all()
+
+  // 5. Cek status login dari Server menggunakan Cookie yang aman (HttpOnly)
+  const isLoggedIn = !!getCookie(c, 'customer_session') // <-- 2. Cek Sesi
 
   // Helpers
   const formatRupiah = (angka: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
@@ -112,7 +116,8 @@ export default createRoute(async (c) => {
             </div>
 
             {/* Tombol Aksi Keranjang / Beli (Island Component) */}
-            <ProductDetailActions product={product} />
+            {/* 3. Lempar props isLoggedIn ke Island Frontend */}
+            <ProductDetailActions product={product} isLoggedIn={isLoggedIn} />
 
             {/* Spek Kadar, Berat, Stok */}
             <div className="grid grid-cols-3 gap-4 py-6 border-y border-navy-200">
