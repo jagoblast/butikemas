@@ -1,13 +1,12 @@
 import { useState } from 'hono/jsx'
 
-// Terima props isLoggedIn
 export default function ProductDetailActions({ product, isLoggedIn }: { product: any, isLoggedIn: boolean }) {
   const [quantity, setQuantity] = useState(1)
 
   const handleBuyNow = () => {
-    // Validasi login menggunakan props dari Server
+    // Validasi login akurat
     if (!isLoggedIn) {
-      window.location.href = `/login?redirect=/products/${product.slug}`
+      window.location.href = `/login?redirect=/customer/checkout`
       return
     }
 
@@ -16,13 +15,12 @@ export default function ProductDetailActions({ product, isLoggedIn }: { product:
       quantity: quantity
     }
 
-    // Set item langsung untuk di-checkout
     localStorage.setItem('butikemas_checkout_items', JSON.stringify([checkoutItem]))
+    // Tembak URL Checkout yang baru
     window.location.href = '/customer/checkout'
   }
 
   const handleAddToCart = () => {
-    // Tambah ke keranjang logic...
     const currentCart = JSON.parse(localStorage.getItem('butikemas_cart') || '[]')
     const existingIdx = currentCart.findIndex((item: any) => item.product.id === product.id)
     
