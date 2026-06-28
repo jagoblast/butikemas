@@ -4,29 +4,41 @@ export default function AdminIntegrationForm() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [formData, setFormData] = useState({
-    rajaongkir_api_key: '',
-    cloudinary_cloud_name: '',
-    cloudinary_upload_preset: ''
+    cloud_name: '',
+    upload_preset: ''
   })
 
-  // Mock fetch (Nantinya sesuaikan dengan endpoint GET /api/admin/settings Anda)
+  // (Opsional) Fetch setting yang sudah ada dari DB saat komponen dimuat
+  useEffect(() => {
+    // fetch('/api/admin/settings/CLOUDINARY_CREDENTIALS').then(...) 
+  }, [])
+
   const handleSubmit = async (e: any) => {
     e.preventDefault()
     setLoading(true)
     setMessage(null)
 
     try {
-      // Ganti dengan endpoint API asli Anda yang menyimpan ke tabel system_settings
+      // API ini harus Anda buat/sesuaikan untuk INSERT/UPDATE ke tabel system_settings
+      const payload = {
+        setting_key: 'CLOUDINARY_CREDENTIALS',
+        setting_data: JSON.stringify({
+          cloud_name: formData.cloud_name,
+          upload_preset: formData.upload_preset
+        })
+      }
+
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       })
       
+      const data = await res.json()
       if (res.ok) {
-        setMessage({ type: 'success', text: 'Konfigurasi integrasi berhasil disimpan!' })
+        setMessage({ type: 'success', text: 'Kredensial Cloudinary berhasil disimpan ke Database D1!' })
       } else {
-        setMessage({ type: 'success', text: 'Konfigurasi integrasi berhasil disimpan! (Simulasi)' })
+        setMessage({ type: 'error', text: data.message || 'Gagal menyimpan konfigurasi.' })
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Terjadi kesalahan jaringan.' })
@@ -47,25 +59,19 @@ export default function AdminIntegrationForm() {
         </div>
       )}
 
-      <div>
-        <label className="block text-sm font-semibold text-navy-900 mb-2">RajaOngkir API Key</label>
-        <input type="text" name="rajaongkir_api_key" value={formData.rajaongkir_api_key} onChange={handleChange} className="w-full px-4 py-2.5 rounded-xl border border-navy-200 bg-gray-50 focus:bg-white outline-none" placeholder="Ketik API Key RajaOngkir Anda..." />
-        <p className="text-xs text-gray-500 mt-1">Digunakan untuk menghitung ongkos kirim secara otomatis.</p>
-      </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-semibold text-navy-900 mb-2">Cloudinary Cloud Name</label>
-          <input type="text" name="cloudinary_cloud_name" value={formData.cloudinary_cloud_name} onChange={handleChange} className="w-full px-4 py-2.5 rounded-xl border border-navy-200 bg-gray-50 focus:bg-white outline-none" placeholder="Misal: dbx....." />
+          <input type="text" name="cloud_name" value={formData.cloud_name} onChange={handleChange} required className="w-full px-4 py-2.5 rounded-xl border border-navy-200 bg-gray-50 focus:bg-white outline-none" placeholder="Misal: dbx....." />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-navy-900 mb-2">Upload Preset</label>
-          <input type="text" name="cloudinary_upload_preset" value={formData.cloudinary_upload_preset} onChange={handleChange} className="w-full px-4 py-2.5 rounded-xl border border-navy-200 bg-gray-50 focus:bg-white outline-none" placeholder="Misal: butikemas_preset" />
+          <label className="block text-sm font-semibold text-navy-900 mb-2">Upload Preset (Unsigned)</label>
+          <input type="text" name="upload_preset" value={formData.upload_preset} onChange={handleChange} required className="w-full px-4 py-2.5 rounded-xl border border-navy-200 bg-gray-50 focus:bg-white outline-none" placeholder="Misal: butikemas_preset" />
         </div>
       </div>
 
       <button type="submit" disabled={loading} className="px-6 py-2.5 bg-gold-400 text-navy-900 font-bold rounded-xl hover:bg-gold-500 transition-colors disabled:opacity-50">
-        {loading ? 'Menyimpan...' : 'Simpan Integrasi'}
+        {loading ? 'Menyimpan...' : 'Simpan Kredensial Cloudinary'}
       </button>
     </form>
   )
