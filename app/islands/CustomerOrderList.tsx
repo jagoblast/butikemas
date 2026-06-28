@@ -56,9 +56,10 @@ export default function CustomerOrderList() {
               <p className="font-bold text-lg text-gold-600 mt-0.5">Rp {order.total_amount?.toLocaleString('id-ID')}</p>
             </div>
             
-            <button className="text-sm font-semibold text-blue-600 bg-blue-50 px-4 py-2 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100 text-center w-full sm:w-auto">
+            {/* Mengganti tag button menjadi anchor (a) untuk memfasilitasi navigasi Detail Order */}
+            <a href={`/customer/orders/${order.id}`} className="text-sm font-semibold text-blue-600 bg-blue-50 px-4 py-2 rounded-xl hover:bg-blue-100 transition-colors border border-blue-100 text-center w-full sm:w-auto block">
               Lihat Detail Pesanan
-            </button>
+            </a>
           </div>
         </div>
       ))}
