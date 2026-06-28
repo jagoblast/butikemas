@@ -10,14 +10,28 @@ const Truck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" v
 const CreditCard = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
 const ShieldCheck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.89 0 5.26 1 7 2a1 1 0 0 1 1 1v7z"/><path d="m9 12 2 2 4-4"/></svg>
 
+// Daftar Metode Pembayaran Sesuai Omnipaygate
+const OMNIPAY_METHODS = [
+  { id: 'qris', name: 'QRIS (Gopay, OVO, Dana, dll)', fee: 0, type: 'QR' },
+  { id: 'bni', name: 'BNI Virtual Account', fee: 4000, type: 'VA' },
+  { id: 'bri', name: 'BRI Virtual Account', fee: 4000, type: 'VA' },
+  { id: 'mandiri', name: 'Mandiri Virtual Account', fee: 4000, type: 'VA' },
+  { id: 'cimb', name: 'CIMB Niaga Virtual Account', fee: 4000, type: 'VA' },
+  { id: 'permata', name: 'Permata Virtual Account', fee: 4000, type: 'VA' },
+  { id: 'bsi', name: 'BSI Virtual Account', fee: 4000, type: 'VA' },
+  { id: 'seabank', name: 'SeaBank Virtual Account', fee: 4000, type: 'VA' }
+]
+
 export default function CheckoutView({ customer }: { customer: any }) {
   const [items, setItems] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [shippingMethod, setShippingMethod] = useState<string | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null)
-
+  
+  // Hitung biaya berdasarkan pilihan
   const shippingCost = shippingMethod === 'JNE' ? 25000 : shippingMethod === 'PAXEL' ? 35000 : shippingMethod === 'PICKUP' ? 0 : 0
-  const paymentFee = paymentMethod === 'QRIS' ? 3000 : paymentMethod === 'VA_BCA' ? 4500 : 0
+  const selectedPayment = OMNIPAY_METHODS.find(m => m.id === paymentMethod)
+  const paymentFee = selectedPayment ? selectedPayment.fee : 0
 
   useEffect(() => {
     const checkoutItems = JSON.parse(localStorage.getItem('butikemas_checkout_items') || '[]')
@@ -44,7 +58,7 @@ export default function CheckoutView({ customer }: { customer: any }) {
         customer_phone: customer?.phone || '',
         shipping_address: customer?.address || '',
         total_amount: grandTotal,
-        payment_method: paymentMethod,
+        payment_method: paymentMethod, // Format string akan langsung cocok dengan Omnipaygate (bni, qris, dll)
         items: items.map(item => ({
           product_id: item.product.id,
           product_name: item.product.name,
@@ -72,9 +86,10 @@ export default function CheckoutView({ customer }: { customer: any }) {
         localStorage.setItem('butikemas_cart', JSON.stringify(remainingCart))
         window.dispatchEvent(new Event('cartUpdated'))
 
-        window.location.href = '/customer/orders'
+        // Redirect ke halaman detail pesanan untuk melihat instruksi bayar / QRIS
+        window.location.href = `/customer/orders/${data.order_id}`
       } else {
-        alert(data.message || 'Gagal memproses pesanan.')
+        alert(data.message || 'Gagal memproses pesanan ke Payment Gateway.')
       }
     } catch (error) {
       alert('Terjadi kesalahan jaringan atau server saat checkout.')
@@ -137,7 +152,7 @@ export default function CheckoutView({ customer }: { customer: any }) {
             <label className={`cursor-pointer rounded-xl border p-4 flex flex-col transition-colors ${shippingMethod === 'JNE' ? 'border-gold-500 bg-gold-50/20' : 'border-gray-200 hover:border-gold-300'}`}>
               <div className="flex items-center justify-between mb-2">
                 <input type="radio" name="shipping" value="JNE" checked={shippingMethod === 'JNE'} onChange={() => setShippingMethod('JNE')} className="w-4 h-4 text-gold-500 focus:ring-gold-500" />
-                <img src="/images/shipping/jne.png" alt="JNE" className="h-4 object-contain" />
+                <span className="text-xs font-bold px-2 py-0.5 bg-red-100 text-red-700 rounded-md">JNE</span>
               </div>
               <span className="font-bold text-navy-900 text-sm">JNE Asuransi</span>
               <span className="text-xs text-gray-500">Estimasi 2-3 Hari • Rp 25.000</span>
@@ -146,7 +161,7 @@ export default function CheckoutView({ customer }: { customer: any }) {
             <label className={`cursor-pointer rounded-xl border p-4 flex flex-col transition-colors ${shippingMethod === 'PAXEL' ? 'border-gold-500 bg-gold-50/20' : 'border-gray-200 hover:border-gold-300'}`}>
               <div className="flex items-center justify-between mb-2">
                 <input type="radio" name="shipping" value="PAXEL" checked={shippingMethod === 'PAXEL'} onChange={() => setShippingMethod('PAXEL')} className="w-4 h-4 text-gold-500 focus:ring-gold-500" />
-                <img src="/images/shipping/paxel.png" alt="Paxel" className="h-4 object-contain" />
+                <span className="text-xs font-bold px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-md">PAXEL</span>
               </div>
               <span className="font-bold text-navy-900 text-sm">Paxel Sameday</span>
               <span className="text-xs text-gray-500">Tiba Hari Ini • Rp 35.000</span>
@@ -168,24 +183,33 @@ export default function CheckoutView({ customer }: { customer: any }) {
         <section className="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
           <div className="flex items-center gap-2 mb-4 text-navy-900">
             <CreditCard />
-            <h2 className="font-bold text-lg">Metode Pembayaran</h2>
+            <h2 className="font-bold text-lg">Metode Pembayaran (Omnipaygate)</h2>
           </div>
-          <div className="space-y-3">
-            <label className={`cursor-pointer rounded-xl border p-4 flex items-center justify-between transition-colors ${paymentMethod === 'VA_BCA' ? 'border-gold-500 bg-gold-50/20' : 'border-gray-200 hover:border-gold-300'}`}>
-              <div className="flex items-center gap-3">
-                <input type="radio" name="payment" value="VA_BCA" checked={paymentMethod === 'VA_BCA'} onChange={() => setPaymentMethod('VA_BCA')} className="w-4 h-4 text-gold-500 focus:ring-gold-500" />
-                <span className="font-bold text-navy-900 text-sm">BCA Virtual Account</span>
-              </div>
-              <span className="text-xs text-gray-500">+ Rp 4.500</span>
-            </label>
-            
-            <label className={`cursor-pointer rounded-xl border p-4 flex items-center justify-between transition-colors ${paymentMethod === 'QRIS' ? 'border-gold-500 bg-gold-50/20' : 'border-gray-200 hover:border-gold-300'}`}>
-              <div className="flex items-center gap-3">
-                <input type="radio" name="payment" value="QRIS" checked={paymentMethod === 'QRIS'} onChange={() => setPaymentMethod('QRIS')} className="w-4 h-4 text-gold-500 focus:ring-gold-500" />
-                <span className="font-bold text-navy-900 text-sm">QRIS (Gopay, OVO, Dana, dll)</span>
-              </div>
-              <span className="text-xs text-gray-500">+ Rp 3.000</span>
-            </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {OMNIPAY_METHODS.map((method) => (
+              <label 
+                key={method.id} 
+                className={`cursor-pointer rounded-xl border p-4 flex items-center justify-between transition-colors ${paymentMethod === method.id ? 'border-gold-500 bg-gold-50/20 shadow-sm' : 'border-gray-200 hover:border-gold-300'}`}
+              >
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="radio" 
+                    name="payment" 
+                    value={method.id} 
+                    checked={paymentMethod === method.id} 
+                    onChange={() => setPaymentMethod(method.id)} 
+                    className="w-4 h-4 text-gold-500 focus:ring-gold-500 shrink-0" 
+                  />
+                  <div className="flex flex-col">
+                    <span className="font-bold text-navy-900 text-sm">{method.name}</span>
+                    <span className="text-xs text-gray-500 mt-0.5">{method.type}</span>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-md shrink-0">
+                  {method.fee === 0 ? 'Gratis' : `+ Rp ${method.fee.toLocaleString('id-ID')}`}
+                </span>
+              </label>
+            ))}
           </div>
         </section>
 
@@ -218,7 +242,7 @@ export default function CheckoutView({ customer }: { customer: any }) {
               disabled={isLoading || !shippingMethod || !paymentMethod}
               className="font-bold px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg text-sm bg-gold-400 text-navy-900 hover:bg-gold-500 active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none disabled:pointer-events-none"
             >
-              {isLoading ? 'Memproses...' : (
+              {isLoading ? 'Memproses Gateway...' : (
                 <>
                   <ShieldCheck /> Bayar Sekarang
                 </>
