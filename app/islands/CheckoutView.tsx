@@ -10,6 +10,7 @@ const Truck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" v
 const CreditCard = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
 const ShieldCheck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.89 0 5.26 1 7 2a1 1 0 0 1 1 1v7z"/><path d="m9 12 2 2 4-4"/></svg>
 
+// Daftar Metode Pembayaran Murni Mengacu ke API Omnipaygate (Tidak ada BCA)
 const OMNIPAY_METHODS = [
   { id: 'qris', name: 'QRIS (Gopay, OVO, Dana, dll)', fee: 0, type: 'QR' },
   { id: 'bni', name: 'BNI Virtual Account', fee: 4000, type: 'VA' },
@@ -47,22 +48,24 @@ export default function CheckoutView({ customer }: { customer: any }) {
     if (!shippingMethod) return alert("Pilih metode pengiriman terlebih dahulu!")
     if (!paymentMethod) return alert("Pilih metode pembayaran terlebih dahulu!")
     
+    // Validasi Limit QRIS dari sisi Client sebelum dikirim ke Server
+    if (paymentMethod === 'qris' && grandTotal > 999999) {
+      return alert("Batas transaksi QRIS adalah Rp 999.999. Silakan pilih Virtual Account.")
+    }
+
     setIsLoading(true)
 
     try {
-      // 1. Kita TIDAK MENGIRIM harga total atau email dari sisi Client ke Server lagi.
-      // Cukup data ID Barang & Metode agar dihitung server. Menutup celah Hack Harga!
       const payload = {
         shipping_address: customer?.address || '',
         payment_method: paymentMethod, 
-        shipping_method: shippingMethod, // Server butuh ini untuk menghitung ongkir
+        shipping_method: shippingMethod,
         items: items.map(item => ({
           product_id: item.product.id,
           quantity: item.quantity
         }))
       }
 
-      // 2. Fetch diubah ke /api/customer/checkout
       const response = await fetch('/api/customer/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,7 +85,7 @@ export default function CheckoutView({ customer }: { customer: any }) {
 
         window.location.href = `/customer/orders/${data.order_id}`
       } else {
-        alert(data.message || 'Gagal memproses pesanan.')
+        alert(data.message || 'Gagal memproses pesanan ke Payment Gateway.')
       }
     } catch (error) {
       alert('Terjadi kesalahan jaringan atau server saat checkout.')
@@ -103,6 +106,7 @@ export default function CheckoutView({ customer }: { customer: any }) {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+        {/* ... Bagian Alamat, Pesanan, dan Pengiriman (Tetap Sama) ... */}
         
         <section className="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
           <div className="flex items-center gap-2 mb-4 text-navy-900">
@@ -179,35 +183,52 @@ export default function CheckoutView({ customer }: { customer: any }) {
             <h2 className="font-bold text-lg">Metode Pembayaran (Omnipaygate)</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {OMNIPAY_METHODS.map((method) => (
-              <label 
-                key={method.id} 
-                className={`cursor-pointer rounded-xl border p-4 flex items-center justify-between transition-colors ${paymentMethod === method.id ? 'border-gold-500 bg-gold-50/20 shadow-sm' : 'border-gray-200 hover:border-gold-300'}`}
-              >
-                <div className="flex items-center gap-3">
-                  <input 
-                    type="radio" 
-                    name="payment" 
-                    value={method.id} 
-                    checked={paymentMethod === method.id} 
-                    onChange={() => setPaymentMethod(method.id)} 
-                    className="w-4 h-4 text-gold-500 focus:ring-gold-500 shrink-0" 
-                  />
-                  <div className="flex flex-col">
-                    <span className="font-bold text-navy-900 text-sm">{method.name}</span>
-                    <span className="text-xs text-gray-500 mt-0.5">{method.type}</span>
+            {OMNIPAY_METHODS.map((method) => {
+              // Validasi UI untuk mencegah klik jika harga melebihi batas QRIS
+              const isQRISDisabled = method.id === 'qris' && grandTotal > 999999
+              
+              return (
+                <label 
+                  key={method.id} 
+                  className={`relative rounded-xl border p-4 flex items-center justify-between transition-colors ${
+                    isQRISDisabled 
+                      ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50' 
+                      : paymentMethod === method.id 
+                        ? 'border-gold-500 bg-gold-50/20 shadow-sm cursor-pointer' 
+                        : 'border-gray-200 hover:border-gold-300 cursor-pointer'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <input 
+                      type="radio" 
+                      name="payment" 
+                      value={method.id} 
+                      disabled={isQRISDisabled}
+                      checked={paymentMethod === method.id} 
+                      onChange={() => setPaymentMethod(method.id)} 
+                      className="w-4 h-4 text-gold-500 focus:ring-gold-500 shrink-0" 
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-bold text-navy-900 text-sm">{method.name}</span>
+                      <span className="text-xs text-gray-500 mt-0.5">{method.type}</span>
+                    </div>
                   </div>
-                </div>
-                <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-md shrink-0">
-                  {method.fee === 0 ? 'Gratis' : `+ Rp ${method.fee.toLocaleString('id-ID')}`}
-                </span>
-              </label>
-            ))}
+                  {isQRISDisabled ? (
+                    <span className="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-1 rounded-md">Limit 999rb</span>
+                  ) : (
+                    <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-md shrink-0">
+                      {method.fee === 0 ? 'Gratis' : `+ Rp ${method.fee.toLocaleString('id-ID')}`}
+                    </span>
+                  )}
+                </label>
+              )
+            })}
           </div>
         </section>
 
       </main>
 
+      {/* FOOTER CHECKOUT (Tetap Sama) */}
       <div className="fixed bottom-0 left-0 w-full z-50 bg-white border-t border-navy-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
         <div className="max-w-3xl mx-auto">
           <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/50">
@@ -232,7 +253,7 @@ export default function CheckoutView({ customer }: { customer: any }) {
             </div>
             <button
               onClick={handleProcessPayment}
-              disabled={isLoading || !shippingMethod || !paymentMethod}
+              disabled={isLoading || !shippingMethod || !paymentMethod || (paymentMethod === 'qris' && grandTotal > 999999)}
               className="font-bold px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg text-sm bg-gold-400 text-navy-900 hover:bg-gold-500 active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none disabled:pointer-events-none"
             >
               {isLoading ? 'Memproses...' : (
