@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'hono/jsx'
 
-// Helper Format Rupiah
 const formatRupiah = (angka: number) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
 }
 
-// Ikon Lucide ke SVG Murni
 const ArrowLeft = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
 const MapPin = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
 const Truck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
@@ -15,26 +13,21 @@ const ShieldCheck = () => <svg className="w-5 h-5" fill="none" stroke="currentCo
 export default function CheckoutView({ customer }: { customer: any }) {
   const [items, setItems] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false)
-
-  // State untuk Pemilihan Ekspedisi & Pembayaran
   const [shippingMethod, setShippingMethod] = useState<string | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null)
 
-  // Simulasi Tarif
   const shippingCost = shippingMethod === 'JNE' ? 25000 : shippingMethod === 'PAXEL' ? 35000 : shippingMethod === 'PICKUP' ? 0 : 0
   const paymentFee = paymentMethod === 'QRIS' ? 3000 : paymentMethod === 'VA_BCA' ? 4500 : 0
 
   useEffect(() => {
-    // Ambil item yang dicentang dari keranjang atau dari "Beli Sekarang"
     const checkoutItems = JSON.parse(localStorage.getItem('butikemas_checkout_items') || '[]')
     if (checkoutItems.length === 0) {
-      window.location.href = '/cart' // Tendang balik ke keranjang jika kosong
+      window.location.href = '/cart'
     } else {
       setItems(checkoutItems)
     }
   }, [])
 
-  // Kalkulasi Harga
   const subtotal = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
   const grandTotal = subtotal + shippingCost + paymentFee
 
@@ -44,18 +37,54 @@ export default function CheckoutView({ customer }: { customer: any }) {
     
     setIsLoading(true)
 
-    // Simulasi Proses Pembuatan Pesanan ke API
-    setTimeout(() => {
-      // Hapus data checkout setelah sukses
-      localStorage.removeItem('butikemas_checkout_items')
-      // Arahkan ke halaman sukses (bisa dibuat nanti)
-      window.location.href = '/customer/orders'
-    }, 2000)
+    try {
+      const payload = {
+        customer_name: customer?.name || 'Pelanggan',
+        customer_email: customer?.email || '',
+        customer_phone: customer?.phone || '',
+        shipping_address: customer?.address || '',
+        total_amount: grandTotal,
+        payment_method: paymentMethod,
+        items: items.map(item => ({
+          product_id: item.product.id,
+          product_name: item.product.name,
+          quantity: item.quantity,
+          price: item.product.price
+        }))
+      }
+
+      const response = await fetch('/api/public/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        localStorage.removeItem('butikemas_checkout_items')
+        
+        // Membersihkan item yang dicheckout dari keranjang utama juga
+        const cartItems = JSON.parse(localStorage.getItem('butikemas_cart') || '[]')
+        const remainingCart = cartItems.filter((cartItem: any) => 
+          !items.some(checkoutItem => checkoutItem.product.id === cartItem.product.id)
+        )
+        localStorage.setItem('butikemas_cart', JSON.stringify(remainingCart))
+        window.dispatchEvent(new Event('cartUpdated'))
+
+        window.location.href = '/customer/orders'
+      } else {
+        alert(data.message || 'Gagal memproses pesanan.')
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan jaringan atau server saat checkout.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <div className="bg-surface min-h-screen pb-44">
-      {/* HEADER */}
       <header className="flex justify-between items-center px-5 py-4 w-full sticky top-0 z-40 bg-navy-900 border-b border-navy-800 shadow-md">
         <div className="flex items-center gap-4">
           <a href="/cart" className="text-gold-400 hover:text-gold-300 transition-colors">
@@ -67,7 +96,6 @@ export default function CheckoutView({ customer }: { customer: any }) {
 
       <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
         
-        {/* 1. ALAMAT PENGIRIMAN */}
         <section className="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
           <div className="flex items-center gap-2 mb-4 text-navy-900">
             <MapPin />
@@ -82,7 +110,6 @@ export default function CheckoutView({ customer }: { customer: any }) {
           </div>
         </section>
 
-        {/* 2. RINGKASAN PRODUK */}
         <section className="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
           <h2 className="font-bold text-lg text-navy-900 mb-4">Pesanan Anda</h2>
           <div className="space-y-4">
@@ -101,7 +128,6 @@ export default function CheckoutView({ customer }: { customer: any }) {
           </div>
         </section>
 
-        {/* 3. METODE PENGIRIMAN */}
         <section className="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
           <div className="flex items-center gap-2 mb-4 text-navy-900">
             <Truck />
@@ -139,7 +165,6 @@ export default function CheckoutView({ customer }: { customer: any }) {
           </div>
         </section>
 
-        {/* 4. METODE PEMBAYARAN */}
         <section className="bg-white rounded-2xl p-5 border border-navy-100 shadow-sm">
           <div className="flex items-center gap-2 mb-4 text-navy-900">
             <CreditCard />
@@ -166,10 +191,8 @@ export default function CheckoutView({ customer }: { customer: any }) {
 
       </main>
 
-      {/* BOTTOM BAR: RINCIAN TOTAL & BAYAR */}
       <div className="fixed bottom-0 left-0 w-full z-50 bg-white border-t border-navy-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
         <div className="max-w-3xl mx-auto">
-          {/* Rincian Expandable */}
           <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/50">
             <div className="flex justify-between items-center mb-1">
               <span className="text-sm text-gray-600">Subtotal Produk</span>
