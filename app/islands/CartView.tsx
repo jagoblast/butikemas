@@ -76,7 +76,7 @@ export default function CartView({ isLoggedIn = false }: { isLoggedIn?: boolean 
     }
 
     saveCheckoutItems(selectedItems)
-    window.location.href = '/checkout'
+    window.location.href = '/customer/checkout'
   }
 
   return (
