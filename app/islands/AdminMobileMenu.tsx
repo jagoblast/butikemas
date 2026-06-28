@@ -4,18 +4,15 @@ export default function AdminMobileMenu() {
   const [isOpen, setIsOpen] = useState(false)
   const [currentPath, setCurrentPath] = useState('')
 
-  // Ambil URL saat Island dimuat di browser
   useEffect(() => {
     setCurrentPath(window.location.pathname)
   }, [])
 
-  // Fungsi aktif untuk mobile
   const isActive = (path: string) => {
     if (path === '/admin') return currentPath === '/admin'
     return currentPath.startsWith(path)
   }
 
-  // Helper styling mobile
   const activeClass = "flex items-center gap-3 px-4 py-3 rounded-xl text-navy-900 bg-gold-400 font-bold transition-all"
   const inactiveClass = "flex items-center gap-3 px-4 py-3 rounded-xl text-navy-200 hover:text-white hover:bg-white/5 font-medium transition-all"
 
@@ -51,6 +48,7 @@ export default function AdminMobileMenu() {
           <a href="/admin/products" className={isActive('/admin/products') ? activeClass : inactiveClass}>Katalog Produk</a>
           <a href="/admin/orders" className={isActive('/admin/orders') ? activeClass : inactiveClass}>Pesanan</a>
           <a href="/admin/customers" className={isActive('/admin/customers') ? activeClass : inactiveClass}>Pelanggan</a>
+          <a href="/admin/articles" className={isActive('/admin/articles') ? activeClass : inactiveClass}>Artikel & Edukasi</a>
           <a href="/admin/settings" className={isActive('/admin/settings') ? activeClass : inactiveClass}>Pengaturan Sistem</a>
           
           <div className="pt-4 mt-4 border-t border-white/10">
