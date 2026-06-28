@@ -14,25 +14,24 @@ const FileText = () => <svg className="w-5 h-5" fill="none" stroke="currentColor
 const PackageIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
 const HomeIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 
-// Terima props isLoggedIn dan currentPath dari server
-export default function PublicNavbar({ currentPath: serverPath = '', isLoggedIn: serverIsLoggedIn = false }: { currentPath?: string, isLoggedIn?: boolean }) {
+export default function PublicNavbar({ currentPath: initialPath, initialIsLoggedIn }: { currentPath?: string, initialIsLoggedIn?: boolean }) {
   const [scrolled, setScrolled] = useState(false)
   const [cartCount, setCartCount] = useState(0)
-  const [isLoggedIn, setIsLoggedIn] = useState(serverIsLoggedIn)
-  const [userName, setUserName] = useState(serverIsLoggedIn ? 'Pelanggan' : '')
+  
+  // Menggunakan props dari server
+  const [isLoggedIn] = useState(initialIsLoggedIn || false)
+  const [userName] = useState(initialIsLoggedIn ? 'Pelanggan' : '')
+  
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [currentPath, setCurrentPath] = useState(serverPath)
+  const [currentPath, setCurrentPath] = useState(initialPath || '')
   
   const profileRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    // Sinkronisasi status auth dengan server (tanpa memanggil document.cookie yang diblock HttpOnly)
     if (typeof window !== 'undefined') {
       setCurrentPath(window.location.pathname)
     }
-    setIsLoggedIn(serverIsLoggedIn)
-    setUserName(serverIsLoggedIn ? 'Pelanggan' : '')
 
     const handleScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -56,11 +55,15 @@ export default function PublicNavbar({ currentPath: serverPath = '', isLoggedIn:
       window.removeEventListener('cartUpdated', syncCartCount)
       document.removeEventListener('mousedown', handleOutsideClick)
     }
-  }, [serverIsLoggedIn])
+  }, [])
 
   useEffect(() => {
-    document.body.style.overflow = isMenuOpen ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = isMenuOpen ? 'hidden' : ''
+    }
+    return () => { 
+      if (typeof document !== 'undefined') document.body.style.overflow = '' 
+    }
   }, [isMenuOpen])
 
   const checkIsActive = (path: string) => {
@@ -247,7 +250,6 @@ export default function PublicNavbar({ currentPath: serverPath = '', isLoggedIn:
                 )}
               </div>
             </div>
-            
           </aside>
         </div>
       )}
