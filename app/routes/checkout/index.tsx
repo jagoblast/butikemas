@@ -4,23 +4,19 @@ import { verify } from 'hono/jwt'
 import CheckoutView from '../../islands/CheckoutView'
 
 export default createRoute(async (c) => {
-  // 1. CEK COOKIE SECARA RAW
-  const allCookies = c.req.raw.headers.get('cookie')
+  // 1. Ambil Cookie
   const token = getCookie(c, 'customer_session')
   
+  // Jika tidak ada token (belum login), kembalikan ke halaman login
   if (!token) {
-    return c.text(`DEBUG MODE: Cookie 'customer_session' TIDAK DITEMUKAN. 
-    Header Cookie yang diterima server: ${allCookies || 'NULL'}`, 401)
+    return c.redirect('/login?redirect=/checkout')
   }
 
-  // 2. CEK JWT_SECRET
+  // 2. Persiapkan JWT Secret
   // @ts-ignore
   const secret = c.env.JWT_SECRET
-  if (!secret) {
-    return c.text('DEBUG MODE: JWT_SECRET di Cloudflare BINDINGS KOSONG!', 500)
-  }
 
-  // 3. COBA VERIFIKASI
+  // 3. Verifikasi Token di Sisi Server
   try {
     // @ts-ignore
     const payload = await verify(token, secret)
@@ -30,15 +26,16 @@ export default createRoute(async (c) => {
       'SELECT name, email, phone, address FROM users WHERE id = ?'
     ).bind(payload.id).first()
 
+    // Jika data user terhapus atau tidak ada di DB
     if (!customer) {
-      return c.text('DEBUG MODE: Token valid, tapi User ID tidak ditemukan di database.', 404)
+      return c.redirect('/login?redirect=/checkout')
     }
 
-    // Jika sukses, baru render
+    // Jika semua valid, render halaman checkout
     return c.render(<CheckoutView customer={customer} />, { title: 'Checkout Pesanan' })
 
   } catch (err: any) {
-    // MUNCULKAN ERROR ASLI TANPA REDIRECT
-    return c.text(`DEBUG MODE: VERIFIKASI GAGAL! Error: ${err.message}. Secret yang dipakai: ${secret.substring(0, 3)}...`, 401)
+    // Jika token tidak valid / kedaluwarsa (error saat proses verify), kembalikan ke halaman login
+    return c.redirect('/login?redirect=/checkout')
   }
 })
