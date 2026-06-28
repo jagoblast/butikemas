@@ -11,6 +11,10 @@ declare module 'hono' {
       STATIC_KV: KVNamespace;
       JWT_SECRET: string;
     }
+    // WAJIB DITAMBAHKAN: Agar c.get('jwtPayload') lolos validasi TypeScript saat build
+    Variables: {
+      jwtPayload: any; 
+    }
   }
   interface ContextRenderer {
     (content: string | Promise<string>, head?: Head): Response | Promise<Response>
