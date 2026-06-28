@@ -4,25 +4,20 @@ import { verify } from 'hono/jwt'
 import CheckoutView from '../../islands/CheckoutView'
 
 export default createRoute(async (c) => {
-  // 1. Ambil Cookie
   const token = getCookie(c, 'customer_session')
   
-  // Jika tidak ada token (belum login), kembalikan ke halaman login
+  // Jika belum ada token, memang harus ke login
   if (!token) {
     return c.redirect('/login?redirect=/checkout')
   }
 
-  // 2. Persiapkan JWT Secret
   // @ts-ignore
   const secret = c.env.JWT_SECRET
 
-  // 3. Verifikasi Token di Sisi Server
   try {
-    // @ts-ignore
     const payload = await verify(token, secret)
     
-    // PERBAIKAN LOGIKA DATABASE:
-    // Mengambil address dari tabel addresses dengan LEFT JOIN karena tabel users tidak punya kolom address.
+    // PERBAIKAN: Gunakan JOIN ke tabel addresses agar tidak error
     // @ts-ignore
     const customer = await c.env.DB.prepare(
       `SELECT u.name, u.email, u.phone, a.address 
@@ -31,21 +26,18 @@ export default createRoute(async (c) => {
        WHERE u.id = ?`
     ).bind(payload.id).first()
 
-    // Jika data user terhapus atau tidak ada di DB
+    // Jika customer tidak ditemukan, hapus cookie sesi yang rusak dan redirect
     if (!customer) {
       deleteCookie(c, 'customer_session', { path: '/' })
       return c.redirect('/login?redirect=/checkout')
     }
 
-    // Jika semua valid, render halaman checkout
+    // Berhasil: Render CheckoutView dengan data yang valid
     return c.render(<CheckoutView customer={customer} />, { title: 'Checkout Pesanan' })
 
   } catch (err: any) {
-    // LOG ERROR AGAR TERLIHAT DI CLOUDFLARE
-    console.error("Checkout SSR Error:", err)
-    
-    // HAPUS COOKIE jika token tidak valid/kedaluwarsa atau DB Crash, 
-    // agar user tidak terjebak loop dan benar-benar mulai sesi baru.
+    console.error("Critical Checkout Error:", err)
+    // Hapus sesi rusak agar tidak loop
     deleteCookie(c, 'customer_session', { path: '/' })
     return c.redirect('/login?redirect=/checkout')
   }
