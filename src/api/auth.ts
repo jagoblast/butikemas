@@ -23,13 +23,13 @@ async function hashPassword(password: string, secret: string) {
 authApi.post('/login', async (c) => {
   const { email, password } = await c.req.json()
 
-  // 1. Cari User berdasarkan Email
+  // 1. Cari User berdasarkan Email ATAU Nomor HP (Mendukung fleksibilitas input live)
   const user = await c.env.DB.prepare(
-    'SELECT * FROM users WHERE email = ?'
-  ).bind(email).first()
+    'SELECT * FROM users WHERE email = ? OR phone = ?'
+  ).bind(email, email).first()
 
   if (!user) {
-    return c.json({ success: false, message: 'Email tidak ditemukan.' }, 401)
+    return c.json({ success: false, message: 'Email atau Nomor HP tidak ditemukan.' }, 401)
   }
 
   // 2. Validasi Kriptografi Password
