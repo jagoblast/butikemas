@@ -3,14 +3,11 @@ import { getCookie } from 'hono/cookie'
 import CartView from '../../islands/CartView'
 
 export default createRoute((c) => {
-  // 1. Cek sesi langsung dari server
+  // Cek otentikasi di server
   const isLoggedIn = !!getCookie(c, 'customer_session')
 
   return c.render(
-    <div className="w-full">
-      {/* 2. Lempar status login ke Island Frontend */}
-      <CartView isLoggedIn={isLoggedIn} />
-    </div>,
+    <CartView isLoggedIn={isLoggedIn} />,
     { title: 'Keranjang Belanja' }
   )
 })
