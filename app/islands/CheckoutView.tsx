@@ -10,7 +10,6 @@ const Truck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" v
 const CreditCard = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
 const ShieldCheck = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.89 0 5.26 1 7 2a1 1 0 0 1 1 1v7z"/><path d="m9 12 2 2 4-4"/></svg>
 
-// Daftar Metode Pembayaran Sesuai Omnipaygate
 const OMNIPAY_METHODS = [
   { id: 'qris', name: 'QRIS (Gopay, OVO, Dana, dll)', fee: 0, type: 'QR' },
   { id: 'bni', name: 'BNI Virtual Account', fee: 4000, type: 'VA' },
@@ -28,7 +27,6 @@ export default function CheckoutView({ customer }: { customer: any }) {
   const [shippingMethod, setShippingMethod] = useState<string | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null)
   
-  // Hitung biaya berdasarkan pilihan
   const shippingCost = shippingMethod === 'JNE' ? 25000 : shippingMethod === 'PAXEL' ? 35000 : shippingMethod === 'PICKUP' ? 0 : 0
   const selectedPayment = OMNIPAY_METHODS.find(m => m.id === paymentMethod)
   const paymentFee = selectedPayment ? selectedPayment.fee : 0
@@ -52,22 +50,20 @@ export default function CheckoutView({ customer }: { customer: any }) {
     setIsLoading(true)
 
     try {
+      // 1. Kita TIDAK MENGIRIM harga total atau email dari sisi Client ke Server lagi.
+      // Cukup data ID Barang & Metode agar dihitung server. Menutup celah Hack Harga!
       const payload = {
-        customer_name: customer?.name || 'Pelanggan',
-        customer_email: customer?.email || '',
-        customer_phone: customer?.phone || '',
         shipping_address: customer?.address || '',
-        total_amount: grandTotal,
-        payment_method: paymentMethod, // Format string akan langsung cocok dengan Omnipaygate (bni, qris, dll)
+        payment_method: paymentMethod, 
+        shipping_method: shippingMethod, // Server butuh ini untuk menghitung ongkir
         items: items.map(item => ({
           product_id: item.product.id,
-          product_name: item.product.name,
-          quantity: item.quantity,
-          price: item.product.price
+          quantity: item.quantity
         }))
       }
 
-      const response = await fetch('/api/public/checkout', {
+      // 2. Fetch diubah ke /api/customer/checkout
+      const response = await fetch('/api/customer/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -77,8 +73,6 @@ export default function CheckoutView({ customer }: { customer: any }) {
 
       if (response.ok && data.success) {
         localStorage.removeItem('butikemas_checkout_items')
-        
-        // Membersihkan item yang dicheckout dari keranjang utama juga
         const cartItems = JSON.parse(localStorage.getItem('butikemas_cart') || '[]')
         const remainingCart = cartItems.filter((cartItem: any) => 
           !items.some(checkoutItem => checkoutItem.product.id === cartItem.product.id)
@@ -86,10 +80,9 @@ export default function CheckoutView({ customer }: { customer: any }) {
         localStorage.setItem('butikemas_cart', JSON.stringify(remainingCart))
         window.dispatchEvent(new Event('cartUpdated'))
 
-        // Redirect ke halaman detail pesanan untuk melihat instruksi bayar / QRIS
         window.location.href = `/customer/orders/${data.order_id}`
       } else {
-        alert(data.message || 'Gagal memproses pesanan ke Payment Gateway.')
+        alert(data.message || 'Gagal memproses pesanan.')
       }
     } catch (error) {
       alert('Terjadi kesalahan jaringan atau server saat checkout.')
@@ -242,7 +235,7 @@ export default function CheckoutView({ customer }: { customer: any }) {
               disabled={isLoading || !shippingMethod || !paymentMethod}
               className="font-bold px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg text-sm bg-gold-400 text-navy-900 hover:bg-gold-500 active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 disabled:shadow-none disabled:pointer-events-none"
             >
-              {isLoading ? 'Memproses Gateway...' : (
+              {isLoading ? 'Memproses...' : (
                 <>
                   <ShieldCheck /> Bayar Sekarang
                 </>
