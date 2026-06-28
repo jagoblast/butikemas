@@ -1,13 +1,13 @@
 import { jsxRenderer } from 'hono/jsx-renderer'
 import { Link, Script } from 'honox/server'
-import { getCookie } from 'hono/cookie' // 1. Tambahkan import ini
+import { getCookie } from 'hono/cookie'
 import PublicNavbar from '../islands/PublicNavbar'
 import BottomBar from '../islands/BottomBar' 
 
 export default jsxRenderer(({ children, title }, c) => {
   const currentPath = c.req.path
   
-  // 2. Cek session langsung dari server
+  // Cek session langsung dari server
   const isLoggedIn = !!getCookie(c, 'customer_session') 
 
   return (
@@ -24,7 +24,7 @@ export default jsxRenderer(({ children, title }, c) => {
       </head>
       <body className="flex flex-col min-h-screen bg-gray-50 antialiased font-sans text-navy-900 pb-16 md:pb-0">
         
-        {/* 3. Passing parameter isLoggedIn ke Navbar */}
+        {/* Passing parameter isLoggedIn ke Navbar */}
         <PublicNavbar currentPath={currentPath} isLoggedIn={isLoggedIn} />
 
         <main className="flex-grow w-full">
@@ -87,7 +87,8 @@ export default jsxRenderer(({ children, title }, c) => {
           </div>
         </footer>
 
-        <BottomBar currentPath={currentPath} />
+        {/* Passing parameter isLoggedIn ke BottomBar */}
+        <BottomBar currentPath={currentPath} isLoggedIn={isLoggedIn} />
       </body>
     </html>
   )
