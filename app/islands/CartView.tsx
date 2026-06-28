@@ -15,12 +15,10 @@ const Minus = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" v
 const Plus = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 const Tag = ({ className }: { className: string }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
 
-// Menambahkan props isLoggedIn untuk mengecek status autentikasi dari Server
 export default function CartView({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   const waLink = 'https://wa.me/6281234567890?text=Halo%20admin,%20saya%20butuh%20bantuan%20terkait%20keranjang%20belanja.'
   const [items, setItems] = useState<any[]>([])
 
-  // Manajemen LocalStorage
   const readCartItems = () => JSON.parse(localStorage.getItem('butikemas_cart') || '[]')
   const saveCartItems = (nextItems: any[]) => localStorage.setItem('butikemas_cart', JSON.stringify(nextItems))
   const saveCheckoutItems = (nextItems: any[]) => localStorage.setItem('butikemas_checkout_items', JSON.stringify(nextItems))
@@ -35,15 +33,12 @@ export default function CartView({ isLoggedIn = false }: { isLoggedIn?: boolean 
     saveCartItems(nextItems)
   }
 
-  // Kalkulasi
   const allChecked = items.length > 0 && items.every((item) => item.checked)
   const selectedItems = items.filter((item) => item.checked)
   const selectedCount = selectedItems.reduce((sum, item) => sum + item.quantity, 0)
   
-  // Asumsi product.price dari database 
   const subtotalPrice = selectedItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
   
-  // Mock Voucher Logik (Bisa dihidupkan jika API siap)
   const hasAppliedVoucher = false
   const discount = 0 
   const totalPrice = Math.max(0, subtotalPrice - discount)
@@ -72,23 +67,20 @@ export default function CartView({ isLoggedIn = false }: { isLoggedIn?: boolean 
     window.dispatchEvent(new Event('cartUpdated')) 
   }
 
-  // Modifikasi alur Checkout
   function handleCheckoutClick() {
     if (selectedCount === 0) return
 
-    // Jika belum login, redirect ke halaman login dan berikan parameter redirect
     if (!isLoggedIn) {
       window.location.href = '/login?redirect=/cart'
       return
     }
 
-    // Jika sudah login, simpan item dan lanjut ke halaman checkout
     saveCheckoutItems(selectedItems)
     window.location.href = '/checkout'
   }
 
   return (
-    <div className="bg-surface min-h-screen pb-44">
+    <div className="bg-surface min-h-screen pb-[200px]">
       <header className="flex justify-between items-center px-5 py-4 w-full sticky top-0 z-40 bg-navy-900 border-b border-navy-800 shadow-md">
         <div className="flex items-center gap-4">
           <a href="/products" className="text-gold-400 hover:text-gold-300 transition-colors">
@@ -164,7 +156,8 @@ export default function CartView({ isLoggedIn = false }: { isLoggedIn?: boolean 
         </div>
       </main>
 
-      <div className="fixed bottom-0 left-0 w-full z-30 shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
+      {/* PERUBAHAN UTAMA: bottom-16 khusus untuk Mobile agar tidak tertutup BottomBar */}
+      <div className="fixed bottom-16 md:bottom-0 left-0 w-full z-30 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
         <div className={`w-full px-5 py-2.5 border-t flex justify-between items-center transition-colors ${
           hasAppliedVoucher ? 'border-green-200 bg-[#E8F5E9]' : 'border-navy-100 bg-white'
         }`}>
@@ -192,7 +185,6 @@ export default function CartView({ isLoggedIn = false }: { isLoggedIn?: boolean 
             </div>
           </div>
           
-          {/* Diubah dari <a> menjadi <button> agar bisa menjalankan validasi JS */}
           <button
             onClick={handleCheckoutClick}
             disabled={totalPrice === 0}
