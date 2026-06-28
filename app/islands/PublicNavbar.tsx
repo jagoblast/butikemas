@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'hono/jsx'
 
-// Ikon Murni sesuai Lucide di repositori Anda
 const Headphones = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
 const ShoppingCart = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
 const User = ({ className = "w-[18px] h-[18px]" }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="14" cy="7" r="4"/></svg>
@@ -15,29 +14,29 @@ const FileText = () => <svg className="w-5 h-5" fill="none" stroke="currentColor
 const PackageIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
 const HomeIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 
-export default function PublicNavbar() {
+// Terima props isLoggedIn dan currentPath dari server
+export default function PublicNavbar({ currentPath: serverPath = '', isLoggedIn: serverIsLoggedIn = false }: { currentPath?: string, isLoggedIn?: boolean }) {
   const [scrolled, setScrolled] = useState(false)
   const [cartCount, setCartCount] = useState(0)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [userName, setUserName] = useState('')
+  const [isLoggedIn, setIsLoggedIn] = useState(serverIsLoggedIn)
+  const [userName, setUserName] = useState(serverIsLoggedIn ? 'Pelanggan' : '')
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [currentPath, setCurrentPath] = useState('')
+  const [currentPath, setCurrentPath] = useState(serverPath)
   
   const profileRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    // 1. Inisialisasi aman dari SSR (Hanya dieksekusi di browser)
-    setCurrentPath(window.location.pathname)
-    const authStatus = document.cookie.includes('customer_session=')
-    setIsLoggedIn(authStatus)
-    setUserName(authStatus ? 'Pelanggan' : '')
+    // Sinkronisasi status auth dengan server (tanpa memanggil document.cookie yang diblock HttpOnly)
+    if (typeof window !== 'undefined') {
+      setCurrentPath(window.location.pathname)
+    }
+    setIsLoggedIn(serverIsLoggedIn)
+    setUserName(serverIsLoggedIn ? 'Pelanggan' : '')
 
-    // 2. Deteksi Scroll untuk merubah background
     const handleScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll, { passive: true })
 
-    // 3. Sinkronisasi Keranjang
     const syncCartCount = () => {
       const items = JSON.parse(localStorage.getItem('butikemas_cart') || '[]')
       setCartCount(items.reduce((sum: number, item: any) => sum + item.quantity, 0))
@@ -45,7 +44,6 @@ export default function PublicNavbar() {
     syncCartCount()
     window.addEventListener('cartUpdated', syncCartCount)
 
-    // 4. Tutup Dropdown jika klik di luar
     function handleOutsideClick(event: MouseEvent) {
       if (!profileRef.current?.contains(event.target as Node)) {
         setIsProfileOpen(false)
@@ -58,9 +56,8 @@ export default function PublicNavbar() {
       window.removeEventListener('cartUpdated', syncCartCount)
       document.removeEventListener('mousedown', handleOutsideClick)
     }
-  }, [])
+  }, [serverIsLoggedIn])
 
-  // Mengunci scroll background saat menu HP terbuka
   useEffect(() => {
     document.body.style.overflow = isMenuOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -74,10 +71,6 @@ export default function PublicNavbar() {
 
   return (
     <>
-      {/* SPACER: Ini KUNCI UTAMA-nya! Karena Header menggunakan position "fixed",
-        ia melayang dan tidak memakan ruang di DOM. Kita butuh div kosong ini
-        sebagai ganjalan setinggi header agar konten di bawahnya tidak tertutup/menabrak!
-      */}
       <div className="h-16 w-full md:h-20" aria-hidden="true" />
       
       <header
@@ -89,7 +82,6 @@ export default function PublicNavbar() {
       >
         <nav className="relative flex h-16 w-full items-center gap-6 px-5 md:grid md:h-20 md:grid-cols-[minmax(260px,1fr)_auto_minmax(260px,1fr)] md:px-7 lg:px-10 max-w-[1400px] mx-auto">
           
-          {/* KIRI: Logo */}
           <a href="/" className="flex min-w-0 items-center group relative z-10 md:justify-self-start" aria-label="Beranda">
             <div className="relative h-9 w-9 flex-shrink-0 md:flex md:h-12 md:w-14 md:items-center md:justify-center md:rounded-lg md:bg-navy-950 md:p-2">
               <img src="https://emas.pasdigi.id/images/logo-lm.png" alt="Logo" className="w-full h-full object-contain drop-shadow-sm transition-all group-hover:drop-shadow-md md:p-1.5" />
@@ -99,14 +91,12 @@ export default function PublicNavbar() {
             </span>
           </a>
 
-          {/* TENGAH (Mobile): Teks Logo di tengah */}
           <a href="/" className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center z-10 md:hidden">
             <div className="leading-tight">
               <span className="block text-[22px] font-heading font-bold text-navy-900 tracking-wide font-serif">Logam Mulia</span>
             </div>
           </a>
 
-          {/* TENGAH (Desktop): Navigasi Link dengan efek garis emas */}
           <div className="hidden items-center justify-center gap-10 md:flex md:justify-self-center">
             {[
               { id: 'home', label: 'Beranda', href: '/' },
@@ -129,7 +119,6 @@ export default function PublicNavbar() {
             })}
           </div>
 
-          {/* KANAN: Ikon Actions & Profil */}
           <div className="flex items-center gap-1 sm:gap-2 ml-auto md:ml-0 md:justify-self-end">
             
             <a href="https://wa.me/6281234567890" target="_blank" rel="noreferrer" className="relative hidden sm:flex h-10 w-10 items-center justify-center rounded-full text-navy-800 transition-all hover:bg-navy-50 hover:text-gold-700">
@@ -145,7 +134,6 @@ export default function PublicNavbar() {
               )}
             </a>
 
-            {/* Dropdown Profil Desktop */}
             <div ref={profileRef} className="relative hidden md:block">
               <button
                 type="button"
@@ -199,7 +187,6 @@ export default function PublicNavbar() {
               )}
             </div>
 
-            {/* Tombol Hamburger Mobile */}
             <button type="button" onClick={() => setIsMenuOpen(true)} className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-navy-900 transition-colors hover:bg-navy-50 md:hidden">
               <Menu />
             </button>
@@ -207,7 +194,6 @@ export default function PublicNavbar() {
         </nav>
       </header>
 
-      {/* ================= DRAWER MENU MOBILE ================= */}
       {isMenuOpen && (
         <div className="fixed inset-0 z-[10000] md:hidden">
           <button type="button" className="absolute inset-0 bg-navy-900/45 backdrop-blur-sm cursor-default" onClick={() => setIsMenuOpen(false)} aria-label="Close menu" />
@@ -227,7 +213,6 @@ export default function PublicNavbar() {
 
             <div className="flex-1 overflow-y-auto px-4 py-4">
               <div className="space-y-1">
-                {/* MENU BERANDA DAN HIGHLIGHT AKTIF SUDAH DITAMBAHKAN DI SINI */}
                 {[
                   { label: 'Beranda', href: '/', icon: HomeIcon },
                   { label: 'Katalog Produk', href: '/products', icon: PackageIcon },
