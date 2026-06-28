@@ -4,41 +4,37 @@ import { verify } from 'hono/jwt'
 import CheckoutView from '../../islands/CheckoutView'
 
 export default createRoute(async (c) => {
+  // 1. Debug Cookie
   const token = getCookie(c, 'customer_session')
-  
   if (!token) {
-    // Redirect di sini wajar jika user benar-benar belum login
-    return c.redirect('/login?redirect=/checkout')
+    return c.text('DEBUG: TIDAK ADA COOKIE "customer_session" DITEMUKAN. Token tidak dikirim browser atau cookie tidak ada.', 401)
   }
 
-  let payload;
+  // 2. Debug Environment Secret
+  // @ts-ignore
+  const secret = c.env.JWT_SECRET
+  if (!secret) {
+    return c.text('DEBUG: ERROR FATAL! JWT_SECRET di Cloudflare kosong (undefined). Anda harus setting Variables di Dashboard!', 500)
+  }
+
+  // 3. Debug JWT Verification
   try {
-    // 1. Cek apakah environment variable JWT_SECRET masuk ke route ini
     // @ts-ignore
-    const secret = c.env.JWT_SECRET;
-    if (!secret) {
-      return c.text('ERROR FATAL SERVER: JWT_SECRET kosong atau tidak terbaca di route checkout!', 500)
+    const payload = await verify(token, secret)
+    
+    // Jika sampai di sini, artinya Login Valid. 
+    // Ambil data DB
+    // @ts-ignore
+    const customer = await c.env.DB.prepare('SELECT name, email, phone, address FROM users WHERE id = ?').bind(payload.id).first()
+    
+    if (!customer) {
+        return c.text('DEBUG: Token Valid, tapi ID User tidak ditemukan di Database!', 404)
     }
 
-    // @ts-ignore
-    payload = await verify(token, secret)
-  } catch (error: any) {
-    // 🚨 REDIRECT DIMATIKAN!
-    // Jika token gagal diverifikasi, munculkan errornya di layar, jangan lempar ke login!
-    return c.text(`ERROR VERIFIKASI TOKEN: Token ditolak oleh server. Alasan: ${error.message}`, 401)
+    return c.render(<CheckoutView customer={customer} />, { title: 'Checkout Pesanan' })
+    
+  } catch (err: any) {
+    // Tampilkan alasan kenapa token ditolak
+    return c.text(`DEBUG: JWT VERIFICATION FAILED! Alasan: ${err.message}`, 401)
   }
-
-  // @ts-ignore
-  const customer = await c.env.DB.prepare(
-    'SELECT name, email, phone, address FROM users WHERE id = ?'
-  ).bind(payload.id).first()
-
-  if (!customer) {
-    return c.text('ERROR FATAL DATABASE: ID Customer di token tidak ditemukan.', 404)
-  }
-
-  return c.render(
-    <CheckoutView customer={customer} />,
-    { title: 'Checkout Pesanan' }
-  )
 })
