@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'hono/jsx'
 
-// Helper Format Rupiah
 const formatRupiah = (angka: number) => {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
 }
 
-// Ikon Lucide Dikonversi ke SVG Murni (Agar kompatibel 100% dengan Hono/JSX)
 const ArrowLeft = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
 const HeadphonesIcon = () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
 const Check = ({ className }: { className: string }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -15,7 +13,8 @@ const Minus = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" v
 const Plus = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 const Tag = ({ className }: { className: string }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
 
-export default function CartView({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
+// Terima prop isLoggedIn
+export default function CartView({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const waLink = 'https://wa.me/6281234567890?text=Halo%20admin,%20saya%20butuh%20bantuan%20terkait%20keranjang%20belanja.'
   const [items, setItems] = useState<any[]>([])
 
@@ -64,14 +63,16 @@ export default function CartView({ isLoggedIn = false }: { isLoggedIn?: boolean 
     const nextItems = items.filter((item) => item.product.id !== id)
     persistItems(nextItems)
     saveCheckoutItems(nextItems.filter((item) => item.checked))
-    window.dispatchEvent(new Event('cartUpdated')) 
+    window.dispatchEvent(new Event('cartUpdated'))
   }
 
-  function handleCheckoutClick() {
-    if (selectedCount === 0) return
-
+  // Handle Checkout Click
+  const handleCheckoutBtn = (e: any) => {
+    e.preventDefault()
+    
+    // Keamanan Frontend sebelum diproses
     if (!isLoggedIn) {
-      window.location.href = '/login?redirect=/cart'
+      window.location.href = '/login?redirect=/customer/checkout'
       return
     }
 
@@ -80,7 +81,7 @@ export default function CartView({ isLoggedIn = false }: { isLoggedIn?: boolean 
   }
 
   return (
-    <div className="bg-surface min-h-screen pb-[200px]">
+    <div className="bg-surface min-h-screen pb-44">
       <header className="flex justify-between items-center px-5 py-4 w-full sticky top-0 z-40 bg-navy-900 border-b border-navy-800 shadow-md">
         <div className="flex items-center gap-4">
           <a href="/products" className="text-gold-400 hover:text-gold-300 transition-colors">
@@ -156,8 +157,7 @@ export default function CartView({ isLoggedIn = false }: { isLoggedIn?: boolean 
         </div>
       </main>
 
-      {/* PERUBAHAN UTAMA: bottom-16 khusus untuk Mobile agar tidak tertutup BottomBar */}
-      <div className="fixed bottom-16 md:bottom-0 left-0 w-full z-30 bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
+      <div className="fixed bottom-0 left-0 w-full z-30 shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
         <div className={`w-full px-5 py-2.5 border-t flex justify-between items-center transition-colors ${
           hasAppliedVoucher ? 'border-green-200 bg-[#E8F5E9]' : 'border-navy-100 bg-white'
         }`}>
@@ -185,9 +185,9 @@ export default function CartView({ isLoggedIn = false }: { isLoggedIn?: boolean 
             </div>
           </div>
           
+          {/* MENGGUNAKAN BUTTON DAN FUNGSI HANDLE BARU */}
           <button
-            onClick={handleCheckoutClick}
-            disabled={totalPrice === 0}
+            onClick={handleCheckoutBtn}
             className={`font-bold px-6 py-3.5 rounded-xl flex items-center gap-2 transition-all shadow-lg text-sm whitespace-nowrap ${
               totalPrice > 0 ? 'bg-gold-400 text-navy-900 hover:brightness-105 active:scale-95 shadow-gold-400/20' : 'bg-navy-100 text-navy-400 pointer-events-none'
             }`}
