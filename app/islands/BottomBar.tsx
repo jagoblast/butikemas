@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'hono/jsx'
 
-export default function BottomBar({ currentPath }: { currentPath: string }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+// 1. TAMBAHKAN PROPS isLoggedIn DARI SERVER
+export default function BottomBar({ currentPath, isLoggedIn: serverIsLoggedIn = false }: { currentPath: string, isLoggedIn?: boolean }) {
+  // 2. Gunakan status dari server sebagai nilai awal
+  const [isLoggedIn, setIsLoggedIn] = useState(serverIsLoggedIn)
   const [cartCount, setCartCount] = useState(0)
 
   const Home = ({ className }: { className?: string }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -10,9 +12,8 @@ export default function BottomBar({ currentPath }: { currentPath: string }) {
   const User = ({ className }: { className?: string }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="14" cy="7" r="4"/></svg>
 
   useEffect(() => {
-    const syncAuth = () => setIsLoggedIn(document.cookie.includes('customer_session=') || !!localStorage.getItem('access_token'))
-    syncAuth()
-    window.addEventListener('storage', syncAuth)
+    // 3. HAPUS pengecekan document.cookie yang salah. Cukup andalkan sinkronisasi prop server.
+    setIsLoggedIn(serverIsLoggedIn)
 
     const syncCart = () => {
       const items = JSON.parse(localStorage.getItem('butikemas_cart') || '[]')
@@ -22,12 +23,11 @@ export default function BottomBar({ currentPath }: { currentPath: string }) {
     window.addEventListener('cartUpdated', syncCart)
 
     return () => {
-      window.removeEventListener('storage', syncAuth)
       window.removeEventListener('cartUpdated', syncCart)
     }
-  }, [])
+  }, [serverIsLoggedIn])
 
-  // KOREKSI: '/cart' telah dihapus dari isHidden!
+  // Menyembunyikan bottom bar di rute tertentu (Checkout, Detail Pesanan, dsb)
   const isHidden = 
     currentPath.match(/^\/products\/[^/]+$/) || 
     currentPath.match(/^\/orders\/[^/]+$/) ||
@@ -55,6 +55,7 @@ export default function BottomBar({ currentPath }: { currentPath: string }) {
         {bottomNavLinks.map((link) => {
           const active = isActive(link.href)
           const Icon = link.icon
+          // Redirect logic aman berdasarkan server
           const href = link.id === 'account' && !isLoggedIn ? '/login' : link.href
           const label = link.id === 'account' && !isLoggedIn ? 'Masuk' : link.label
 
