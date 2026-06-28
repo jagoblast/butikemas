@@ -7,6 +7,8 @@ const authApi = new Hono<{ Bindings: Env['Bindings'] }>()
 // ==========================================
 // 🔐 FUNGSI KRIPTOGRAFI PASSWORD EDGE
 // ==========================================
+// Menggunakan Web Crypto API bawaan browser/V8 (Tanpa perlu install library berat).
+// Ditambah 'secret salt' agar aman dari serangan Rainbow Table.
 async function hashPassword(password: string, secret: string) {
   const encoder = new TextEncoder()
   const data = encoder.encode(password + secret)
@@ -21,16 +23,17 @@ async function hashPassword(password: string, secret: string) {
 authApi.post('/login', async (c) => {
   const { email, password } = await c.req.json()
 
-  // 1. Cari User berdasarkan Email ATAU Nomor HP
+  // 1. Cari User berdasarkan Email
   const user = await c.env.DB.prepare(
-    'SELECT * FROM users WHERE email = ? OR phone = ?'
-  ).bind(email, email).first()
+    'SELECT * FROM users WHERE email = ?'
+  ).bind(email).first()
 
   if (!user) {
-    return c.json({ success: false, message: 'Email atau Nomor HP tidak ditemukan.' }, 401)
+    return c.json({ success: false, message: 'Email tidak ditemukan.' }, 401)
   }
 
   // 2. Validasi Kriptografi Password
+  // Lakukan hash pada input user, lalu bandingkan dengan hash di database
   const inputHash = await hashPassword(password, c.env.JWT_SECRET)
   const isPasswordValid = inputHash === user.password_hash
 
@@ -55,7 +58,7 @@ authApi.post('/login', async (c) => {
     secure: true,
     httpOnly: true,
     maxAge: 60 * 60 * 24,
-    sameSite: 'Lax'
+    sameSite: 'Lax' // <-- PERBAIKAN: Harus Lax untuk sistem web dengan sistem Redirect Navigasi
   })
 
   return c.json({ 
@@ -64,6 +67,7 @@ authApi.post('/login', async (c) => {
     role: user.role 
   })
 })
+
 
 // ==========================================
 // ENDPOINT REGISTRASI BARU (Khusus Customer)
@@ -80,7 +84,7 @@ authApi.post('/register', async (c) => {
     return c.json({ success: false, message: 'Email sudah terdaftar. Silakan login.' }, 400)
   }
 
-  // 2. HASH PASSWORD SEBELUM DISIMPAN
+  // 2. HASH PASSWORD SEBELUM DISIMPAN (Production Ready!)
   const passwordHash = await hashPassword(password, c.env.JWT_SECRET)
 
   try {
@@ -101,8 +105,11 @@ authApi.post('/register', async (c) => {
 // ENDPOINT LOGOUT (MENGHAPUS SESI)
 // ==========================================
 authApi.get('/logout', async (c) => {
+  // Wajib hapus cookie untuk kedua role dengan path '/' agar browser menghapusnya dari semua rute
   deleteCookie(c, 'customer_session', { path: '/' })
   deleteCookie(c, 'admin_session', { path: '/' })
+  
+  // Arahkan kembali ke halaman login
   return c.redirect('/login')
 })
 
