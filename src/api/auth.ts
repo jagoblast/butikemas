@@ -58,7 +58,7 @@ authApi.post('/login', async (c) => {
     secure: true,
     httpOnly: true,
     maxAge: 60 * 60 * 24,
-    sameSite: 'Strict'
+    sameSite: 'Lax'
   })
 
   return c.json({ 
