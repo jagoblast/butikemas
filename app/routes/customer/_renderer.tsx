@@ -1,5 +1,7 @@
 import { jsxRenderer } from 'hono/jsx-renderer'
 import { Link, Script } from 'honox/server'
+import { getCookie } from 'hono/cookie' // 1. Import getCookie untuk SSR Auth
+import BottomBar from '../../islands/BottomBar' // 2. Import BottomBar
 
 export default jsxRenderer(({ children, title }, c) => {
   const currentPath = c.req.path
@@ -14,6 +16,9 @@ export default jsxRenderer(({ children, title }, c) => {
 
   // Ambil nama user dari Payload JWT
   const user = c.get('jwtPayload') || { name: 'Member' }
+  
+  // 3. Cek Status Login untuk BottomBar
+  const isLoggedIn = !!getCookie(c, 'customer_session')
 
   return (
     <html lang="id">
@@ -27,7 +32,8 @@ export default jsxRenderer(({ children, title }, c) => {
         <Link rel="stylesheet" href="/app/style.css" />
         <Script src="/app/client.ts" />
       </head>
-      <body className="bg-gray-50 min-h-screen font-sans antialiased text-navy-900 flex flex-col">
+      {/* 4. Tambahkan pb-16 khusus mobile agar konten tidak tertutup BottomBar */}
+      <body className="bg-gray-50 min-h-screen font-sans antialiased text-navy-900 flex flex-col pb-16 md:pb-0">
         
         {/* Header Sederhana Member */}
         <header className="bg-white shadow-sm sticky top-0 z-40">
@@ -83,6 +89,10 @@ export default jsxRenderer(({ children, title }, c) => {
         <footer className="bg-white border-t border-gray-200 py-6 mt-auto text-center text-sm text-gray-500">
           <p>&copy; {new Date().getFullYear()} Logam Mulia Member Portal.</p>
         </footer>
+
+        {/* 5. Render BottomBar */}
+        <BottomBar currentPath={currentPath} isLoggedIn={isLoggedIn} />
+        
       </body>
     </html>
   )
