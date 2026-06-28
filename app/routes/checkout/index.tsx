@@ -1,6 +1,6 @@
 import { createRoute } from 'honox/factory'
-import { getCookie } from 'hono/cookie'
-import { decode } from 'hono/jwt'
+import { getCookie, deleteCookie } from 'hono/cookie'
+import { verify } from 'hono/jwt'
 import CheckoutView from '../../islands/CheckoutView'
 
 export default createRoute(async (c) => {
@@ -12,39 +12,41 @@ export default createRoute(async (c) => {
     return c.redirect('/login?redirect=/checkout')
   }
 
-  let customer = null;
+  // 2. Persiapkan JWT Secret
+  // @ts-ignore
+  const secret = c.env.JWT_SECRET
 
+  // 3. Verifikasi Token di Sisi Server
   try {
-    // 2. Decode JWT secara aman TANPA butuh JWT_SECRET di sisi Server Rendering
-    // Ini mencegah error "undefined bindings" yang memicu infinite loop.
-    const { payload } = decode(token)
-    
-    // 3. Query DB secara aman dengan LEFT JOIN
     // @ts-ignore
-    const db = c.env.DB
+    const payload = await verify(token, secret)
     
-    if (db && payload?.id) {
-      customer = await db.prepare(
-        `SELECT u.name, u.email, u.phone, a.address 
-         FROM users u 
-         LEFT JOIN addresses a ON u.id = a.user_id AND a.is_default = 1 
-         WHERE u.id = ?`
-      ).bind(payload.id).first()
+    // PERBAIKAN LOGIKA DATABASE:
+    // Mengambil address dari tabel addresses dengan LEFT JOIN karena tabel users tidak punya kolom address.
+    // @ts-ignore
+    const customer = await c.env.DB.prepare(
+      `SELECT u.name, u.email, u.phone, a.address 
+       FROM users u 
+       LEFT JOIN addresses a ON u.id = a.user_id AND a.is_default = 1 
+       WHERE u.id = ?`
+    ).bind(payload.id).first()
+
+    // Jika data user terhapus atau tidak ada di DB
+    if (!customer) {
+      deleteCookie(c, 'customer_session', { path: '/' })
+      return c.redirect('/login?redirect=/checkout')
     }
+
+    // Jika semua valid, render halaman checkout
+    return c.render(<CheckoutView customer={customer} />, { title: 'Checkout Pesanan' })
+
   } catch (err: any) {
-    // 🔴 PERUBAHAN FATAL: 
-    // Jika terjadi error pada sistem/DB saat merender halaman, 
-    // JANGAN PERNAH menghapus cookie dan melempar user ke login! 
-    // Biarkan kode lanjut ke bawah agar tidak terjadi Loop Login.
-    console.error("SSR Checkout Parsing Error:", err)
+    // LOG ERROR AGAR TERLIHAT DI CLOUDFLARE
+    console.error("Checkout SSR Error:", err)
+    
+    // HAPUS COOKIE jika token tidak valid/kedaluwarsa atau DB Crash, 
+    // agar user tidak terjebak loop dan benar-benar mulai sesi baru.
+    deleteCookie(c, 'customer_session', { path: '/' })
+    return c.redirect('/login?redirect=/checkout')
   }
-
-  // 4. Fallback Aman
-  // Jika terjadi error sistem atau data alamat kosong, berikan data dummy 
-  // agar form CheckoutView tetap bisa terbuka dan user tidak stuck di halaman login.
-  if (!customer) {
-    customer = { name: 'Pelanggan', address: '' }
-  }
-
-  return c.render(<CheckoutView customer={customer} />, { title: 'Checkout Pesanan' })
 })
