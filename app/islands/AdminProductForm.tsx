@@ -62,7 +62,7 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
     })
   }
 
-  // Handler untuk mengupload file secara streaming ke Cloudinary melalui backend
+  // Handler untuk mengupload file secara streaming ke Cloudinary melalui backend upload.ts
   const handleFileChange = async (e: any) => {
     const file = e.target.files[0]
     if (!file) return
@@ -74,14 +74,16 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
     uploadData.append('file', file)
 
     try {
-      const res = await fetch('/api/admin/products/upload', {
+      // Menembak endpoint API upload utama yang sudah Anda buat
+      const res = await fetch('/api/admin/upload', {
         method: 'POST',
         body: uploadData
       })
       const data = await res.json()
 
       if (res.ok && data.success) {
-        setFormData(prev => ({ ...prev, image_url: data.url }))
+        // Menggunakan data.image_url sesuai kembalian dari upload.ts
+        setFormData(prev => ({ ...prev, image_url: data.image_url }))
         setMessage({ type: 'success', text: 'Gambar berhasil diunggah ke Cloudinary!' })
       } else {
         setMessage({ type: 'error', text: data.message || 'Gagal mengunggah gambar.' })
