@@ -21,9 +21,14 @@ export default createRoute(async (c) => {
     // @ts-ignore
     const payload = await verify(token, secret)
     
+    // PERBAIKAN ULTIMATE: Menggunakan LEFT JOIN ke tabel addresses
+    // Mengambil alamat yang di-set sebagai default (is_default = 1)
     // @ts-ignore
     const customer = await c.env.DB.prepare(
-      'SELECT name, email, phone, address FROM users WHERE id = ?'
+      `SELECT u.name, u.email, u.phone, a.address 
+       FROM users u 
+       LEFT JOIN addresses a ON u.id = a.user_id AND a.is_default = 1 
+       WHERE u.id = ?`
     ).bind(payload.id).first()
 
     // Jika data user terhapus atau tidak ada di DB
@@ -36,7 +41,7 @@ export default createRoute(async (c) => {
     return c.render(<CheckoutView customer={customer} />, { title: 'Checkout Pesanan' })
 
   } catch (err: any) {
-    // Jika token tidak valid / kedaluwarsa (error saat proses verify), wajib hapus cookie agar tidak merusak state halaman lain
+    // Jika token tidak valid / kedaluwarsa (error saat proses verify)
     deleteCookie(c, 'customer_session', { path: '/' })
     return c.redirect('/login?redirect=/checkout')
   }
