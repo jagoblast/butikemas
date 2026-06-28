@@ -59,6 +59,7 @@ api.use('/customer/*', async (c, next) => {
   const jwtMiddleware = jwt({
     secret: c.env.JWT_SECRET,
     alg: 'HS256',
+    cookie: 'customer_session',
   })
   return jwtMiddleware(c, next)
 })
