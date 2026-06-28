@@ -1,9 +1,21 @@
-import { useState } from 'hono/jsx'
+import { useState, useEffect } from 'hono/jsx'
 
 export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
+  const [redirectUrl, setRedirectUrl] = useState('/')
+
+  // Menangkap parameter redirect secara aman dari window location di sisi client
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const target = params.get('redirect')
+      if (target) {
+        setRedirectUrl(target)
+      }
+    }
+  }, [])
 
   const [formData, setFormData] = useState({
     email: '',
@@ -48,8 +60,8 @@ export default function LoginForm() {
       if (data.role === 'ADMIN' || data.role === 'SUPER_ADMIN') {
         window.location.href = '/admin' // Masuk ke Dashboard Admin
       } else {
-        // Jika role CUSTOMER, bisa diarahkan ke beranda atau halaman profil
-        window.location.href = '/' 
+        // Jika role CUSTOMER, diarahkan ke target URL asal (misal /checkout atau /customer/orders)
+        window.location.href = redirectUrl 
       }
 
     } catch (err: any) {
