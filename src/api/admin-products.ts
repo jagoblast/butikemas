@@ -4,6 +4,21 @@ import { Hono } from 'hono'
 const adminProductsApi = new Hono<{ Bindings: Env['Bindings'] }>()
 
 // ==========================================
+// [GET] Ambil Semua Produk (Untuk Tabel)
+// ==========================================
+adminProductsApi.get('/', async (c) => {
+  try {
+    const { results } = await c.env.DB.prepare(
+      `SELECT * FROM products ORDER BY created_at DESC`
+    ).all()
+    
+    return c.json({ success: true, data: results })
+  } catch (error) {
+    console.error('Error fetching all products:', error)
+    return c.json({ success: false, message: 'Gagal mengambil daftar produk' }, 500)
+  }
+})
+// ==========================================
 // [POST] Streaming Upload ke Cloudinary
 // ==========================================
 adminProductsApi.post('/upload', async (c) => {
