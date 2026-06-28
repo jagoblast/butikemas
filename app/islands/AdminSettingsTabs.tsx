@@ -1,5 +1,7 @@
 import { useState } from 'hono/jsx'
 import AdminChangePassword from './AdminChangePassword'
+import AdminIntegrationForm from './AdminIntegrationForm' // IMPORT FORM INTEGRASI
+import AdminCompanyProfileForm from './AdminCompanyProfileForm' // IMPORT FORM PROFIL
 
 export default function AdminSettingsTabs() {
   const [activeTab, setActiveTab] = useState('password')
@@ -26,7 +28,7 @@ export default function AdminSettingsTabs() {
               : 'bg-transparent text-gray-600 border-transparent hover:bg-white hover:text-navy-900'
           }`}
         >
-          Integrasi (RajaOngkir & Cloudinary)
+          Integrasi Sistem
         </button>
         <button 
           onClick={() => setActiveTab('company')}
@@ -50,20 +52,16 @@ export default function AdminSettingsTabs() {
               <AdminChangePassword />
             </div>
           )}
-
           {activeTab === 'integration' && (
             <div>
               <h2 className="text-lg font-bold text-navy-900 mb-4 border-b border-gray-100 pb-4">Integrasi Sistem</h2>
-              <p className="text-sm text-gray-500">Pengaturan API Key untuk pihak ketiga akan diletakkan di sini.</p>
-              {/* Nanti Anda bisa memasukkan <AdminIntegrationForm /> di sini */}
+              <AdminIntegrationForm /> 
             </div>
           )}
-
           {activeTab === 'company' && (
             <div>
-              <h2 className="text-lg font-bold text-navy-900 mb-4 border-b border-gray-100 pb-4">Informasi Perusahaan</h2>
-              <p className="text-sm text-gray-500">Form untuk mengubah profil, alamat, dan logo perusahaan.</p>
-              {/* Nanti Anda bisa memasukkan <AdminCompanyProfileForm /> di sini */}
+              <h2 className="text-lg font-bold text-navy-900 mb-4 border-b border-gray-100 pb-4">Profil Perusahaan</h2>
+              <AdminCompanyProfileForm />
             </div>
           )}
 
