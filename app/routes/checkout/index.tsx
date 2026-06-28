@@ -1,5 +1,5 @@
 import { createRoute } from 'honox/factory'
-import { getCookie } from 'hono/cookie'
+import { getCookie, deleteCookie } from 'hono/cookie'
 import { verify } from 'hono/jwt'
 import CheckoutView from '../../islands/CheckoutView'
 
@@ -28,6 +28,7 @@ export default createRoute(async (c) => {
 
     // Jika data user terhapus atau tidak ada di DB
     if (!customer) {
+      deleteCookie(c, 'customer_session', { path: '/' })
       return c.redirect('/login?redirect=/checkout')
     }
 
@@ -35,7 +36,8 @@ export default createRoute(async (c) => {
     return c.render(<CheckoutView customer={customer} />, { title: 'Checkout Pesanan' })
 
   } catch (err: any) {
-    // Jika token tidak valid / kedaluwarsa (error saat proses verify), kembalikan ke halaman login
+    // Jika token tidak valid / kedaluwarsa (error saat proses verify), bersihkan cookie agar tidak merusak state dan kembalikan ke halaman login
+    deleteCookie(c, 'customer_session', { path: '/' })
     return c.redirect('/login?redirect=/checkout')
   }
 })
