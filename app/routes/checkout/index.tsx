@@ -23,7 +23,7 @@ export default createRoute(async (c) => {
     
     // @ts-ignore
     const customer = await c.env.DB.prepare(
-      'SELECT name, email, phone, address FROM users WHERE id = ?'
+      'SELECT id, name, email, phone, address FROM users WHERE id = ?'
     ).bind(payload.id).first()
 
     // Jika data user terhapus atau tidak ada di DB

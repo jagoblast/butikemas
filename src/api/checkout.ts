@@ -12,7 +12,7 @@ checkoutApi.post('/', async (c) => {
       return c.json({ success: false, message: 'Autentikasi gagal. Silakan relogin.' }, 401)
     }
 
-    const user: any = await c.env.DB.prepare('SELECT name, email, phone FROM users WHERE id = ?').bind(jwtPayload.id).first()
+    const user: any = await c.env.DB.prepare('SELECT id, name, email, phone FROM users WHERE id = ?').bind(jwtPayload.id).first()
     if (!user) {
       return c.json({ success: false, message: 'Data Pengguna tidak valid' }, 401)
     }
@@ -97,18 +97,27 @@ checkoutApi.post('/', async (c) => {
       return c.json({ success: false, message: 'Gagal membuat tagihan di Payment Gateway' }, 400)
     }
 
+    // FIX: Tambah user_id saat insert order
     await c.env.DB.prepare(
-      `INSERT INTO orders (id, customer_name, customer_email, customer_phone, shipping_address, total_amount, payment_method, status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')`
+      `INSERT INTO orders (id, user_id, customer_name, customer_email, customer_phone, shipping_address, total_amount, shipping_cost, grand_total, payment_method, status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`
     ).bind(
-      orderId, user.name, user.email, user.phone, shipping_address, grandTotal, pMethod
+      orderId, user.id, user.name, user.email, user.phone, shipping_address, calculatedSubtotal, shippingCost, grandTotal, pMethod
     ).run()
 
     for (const item of validItems) {
       await c.env.DB.prepare(
-        `INSERT INTO order_items (order_id, product_id, product_name, quantity, price_at_checkout)
-         VALUES (?, ?, ?, ?, ?)`
-      ).bind(orderId, item.product_id, item.product_name, item.quantity, item.price).run()
+        `INSERT INTO order_items (id, order_id, product_id, product_name, price_at_purchase, quantity, subtotal)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        `${orderId}-${item.product_id}`,
+        orderId, 
+        item.product_id, 
+        item.product_name, 
+        item.price, 
+        item.quantity,
+        item.price * item.quantity
+      ).run()
       
       await c.env.DB.prepare(
         'UPDATE products SET stock = stock - ? WHERE id = ?'

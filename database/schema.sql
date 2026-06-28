@@ -156,6 +156,7 @@ CREATE TABLE product_images (
 -- ========================================================================
 
 -- Tabel Pesanan (Orders)
+-- FIX: Tambah user_id untuk relasi yang lebih kuat dengan users table
 CREATE TABLE orders (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
@@ -192,6 +193,8 @@ CREATE TABLE orders (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+CREATE INDEX idx_orders_status ON orders(status);
 
 -- Tabel Item Pesanan
 CREATE TABLE order_items (
