@@ -36,7 +36,7 @@ export default createRoute(async (c) => {
     return c.render(<CheckoutView customer={customer} />, { title: 'Checkout Pesanan' })
 
   } catch (err: any) {
-    // Jika token tidak valid / kedaluwarsa (error saat proses verify), bersihkan cookie agar tidak merusak state dan kembalikan ke halaman login
+    // Jika token tidak valid / kedaluwarsa (error saat proses verify), wajib hapus cookie agar tidak merusak state halaman lain
     deleteCookie(c, 'customer_session', { path: '/' })
     return c.redirect('/login?redirect=/checkout')
   }
