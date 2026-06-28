@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { sign } from 'hono/jwt'
-import { setCookie } from 'hono/cookie'
+import { setCookie, deleteCookie } from 'hono/cookie'
 
 const authApi = new Hono<{ Bindings: Env['Bindings'] }>()
 
@@ -99,6 +99,18 @@ authApi.post('/register', async (c) => {
     console.error("Register Error:", error)
     return c.json({ success: false, message: 'Gagal menyimpan data ke sistem.' }, 500)
   }
+})
+
+// ==========================================
+// ENDPOINT LOGOUT (MENGHAPUS SESI)
+// ==========================================
+authApi.get('/logout', async (c) => {
+  // Wajib hapus cookie untuk kedua role dengan path '/' agar browser menghapusnya dari semua rute
+  deleteCookie(c, 'customer_session', { path: '/' })
+  deleteCookie(c, 'admin_session', { path: '/' })
+  
+  // Arahkan kembali ke halaman login
+  return c.redirect('/login')
 })
 
 export default authApi
