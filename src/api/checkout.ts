@@ -1,68 +1,29 @@
 import { Hono } from 'hono'
 
-const checkoutApi = new Hono<{ Bindings: Env['Bindings'], Variables: { jwtPayload: any } }>()
+const checkoutApi = new Hono<{ Bindings: Env['Bindings'] }>()
 
 checkoutApi.post('/', async (c) => {
+  // Ambil ID Pelanggan langsung dari token JWT yang sudah diverifikasi middleware
+  const payload = c.get('jwtPayload')
+  const customerId = payload.id
+
   const body = await c.req.json()
-  const { shipping_address, items, payment_method, shipping_method } = body
+  const { shipping_address, items, total_amount, payment_method } = body
 
   try {
-    const jwtPayload = c.get('jwtPayload')
-    if (!jwtPayload || !jwtPayload.id) {
-      return c.json({ success: false, message: 'Autentikasi gagal. Silakan relogin.' }, 401)
+    // 1. Ambil data asli pelanggan dari Database
+    const customer: any = await c.env.DB.prepare(
+      'SELECT name, email, phone FROM users WHERE id = ?'
+    ).bind(customerId).first()
+
+    if (!customer) {
+      return c.json({ success: false, message: 'Data pengguna tidak valid' }, 401)
     }
 
-    const user: any = await c.env.DB.prepare('SELECT name, email, phone FROM users WHERE id = ?').bind(jwtPayload.id).first()
-    if (!user) {
-      return c.json({ success: false, message: 'Data Pengguna tidak valid' }, 401)
-    }
-
-    // Validasi Metode Pembayaran Secara Keseluruhan (Termasuk menolak BCA jika ada yg menebak API)
-    const validMethods = ['qris', 'usdt', 'bni', 'bri', 'mandiri', 'cimb', 'permata', 'bsi', 'seabank']
-    const pMethod = payment_method.toLowerCase()
-    
-    if (!validMethods.includes(pMethod)) {
-       return c.json({ success: false, message: `Metode pembayaran ${pMethod} tidak didukung.` }, 400)
-    }
-
-    // Kalkulasi Total Terpercaya di Server 
-    let calculatedSubtotal = 0
-    const validItems = []
-
-    for (const item of items) {
-      const product: any = await c.env.DB.prepare('SELECT id, name, price, stock FROM products WHERE id = ?').bind(item.product_id).first()
-      
-      if (!product) {
-        return c.json({ success: false, message: `Produk ID tidak valid.` }, 400)
-      }
-      if (product.stock < item.quantity) {
-        return c.json({ success: false, message: `Stok produk ${product.name} habis.` }, 400)
-      }
-      
-      calculatedSubtotal += product.price * item.quantity
-      validItems.push({
-        product_id: product.id,
-        product_name: product.name,
-        quantity: item.quantity,
-        price: product.price 
-      })
-    }
-
-    const shippingCost = shipping_method === 'JNE' ? 25000 : shipping_method === 'PAXEL' ? 35000 : 0
-    const OMNIPAY_METHODS: Record<string, number> = {
-      qris: 0, usdt: 0, bni: 4000, bri: 4000, mandiri: 4000, cimb: 4000, permata: 4000, bsi: 4000, seabank: 4000
-    }
-    
-    const paymentFee = OMNIPAY_METHODS[pMethod] ?? 0
-    const grandTotal = calculatedSubtotal + shippingCost + paymentFee
-
-    // VALIDASI LIMIT QRIS 999.999
-    if (pMethod === 'qris' && grandTotal > 999999) {
-       return c.json({ success: false, message: 'Batas maksimal transaksi metode QRIS adalah Rp 999.999' }, 400)
-    }
-
+    // 2. Generate Invoice ID
     const orderId = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`
 
+    // 3. Ambil Kredensial Payment Gateway dari DB
     const dbSettings: any = await c.env.DB.prepare(
       `SELECT setting_data FROM system_settings WHERE setting_key = 'OMNIPAYGATE_CREDENTIALS'`
     ).first()
@@ -73,12 +34,13 @@ checkoutApi.post('/', async (c) => {
 
     const gatewayCreds = JSON.parse(dbSettings.setting_data)
 
+    // 4. Request ke API Omnipaygate (Gunakan data dari DB, bukan dari Frontend)
     const gatewayPayload = {
-      amount: grandTotal,
-      payment_method: pMethod, 
+      amount: total_amount,
+      payment_method: payment_method.toLowerCase(), // qris, bca_va
       reference_id: orderId,
-      customer_name: user.name,
-      customer_email: user.email || ''
+      customer_name: customer.name,
+      customer_email: customer.email || ''
     }
 
     const gatewayRes = await fetch('https://omnipaygate.com/api/v1/payments', {
@@ -97,14 +59,16 @@ checkoutApi.post('/', async (c) => {
       return c.json({ success: false, message: 'Gagal membuat tagihan di Payment Gateway' }, 400)
     }
 
+    // 5. Simpan Data Order dengan 'customer_id' agar masuk ke Riwayat Transaksi!
     await c.env.DB.prepare(
-      `INSERT INTO orders (id, customer_name, customer_email, customer_phone, shipping_address, total_amount, payment_method, status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')`
+      `INSERT INTO orders (id, customer_id, customer_name, customer_email, customer_phone, shipping_address, total_amount, payment_method, status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`
     ).bind(
-      orderId, user.name, user.email, user.phone, shipping_address, grandTotal, pMethod
+      orderId, customerId, customer.name, customer.email, customer.phone, shipping_address, total_amount, payment_method
     ).run()
 
-    for (const item of validItems) {
+    // 6. Simpan Item Keranjang 
+    for (const item of items) {
       await c.env.DB.prepare(
         `INSERT INTO order_items (order_id, product_id, product_name, quantity, price_at_checkout)
          VALUES (?, ?, ?, ?, ?)`
