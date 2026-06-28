@@ -32,7 +32,8 @@ export default createRoute((c) => {
               <td className="p-4">Rp 1.350.000</td>
               <td className="p-4">15</td>
               <td className="p-4">
-                <a href="/admin/products/1/edit" className="text-blue-600 hover:underline">Edit</a>
+                {/* PERBAIKAN FATAL: Menghapus /edit agar cocok dengan routing HonoX [id].tsx */}
+                <a href="/admin/products/1" className="text-blue-600 font-semibold hover:underline">Edit</a>
               </td>
             </tr>
           </tbody>
