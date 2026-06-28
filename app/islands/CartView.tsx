@@ -18,7 +18,6 @@ const Tag = ({ className }: { className: string }) => <svg className={className}
 export default function CartView() {
   const waLink = 'https://wa.me/6281234567890?text=Halo%20admin,%20saya%20butuh%20bantuan%20terkait%20keranjang%20belanja.'
   const [items, setItems] = useState<any[]>([])
-  const [checkoutHref, setCheckoutHref] = useState('/login?redirect=/checkout')
 
   // Manajemen LocalStorage
   const readCartItems = () => JSON.parse(localStorage.getItem('butikemas_cart') || '[]')
@@ -28,10 +27,7 @@ export default function CartView() {
   useEffect(() => {
     const storedItems = readCartItems()
     setItems(storedItems)
-    
-    // Cek apakah user sudah login via cookie
-    const isLoggedIn = document.cookie.includes('customer_session=')
-    setCheckoutHref(isLoggedIn ? '/checkout' : '/login?redirect=/checkout')
+    // Pengecekan document.cookie dihapus dari sini
   }, [])
 
   function persistItems(nextItems: any[]) {
@@ -185,7 +181,7 @@ export default function CartView() {
             </div>
           </div>
           <a
-            href={checkoutHref}
+            href="/checkout"
             onClick={prepareCheckout}
             className={`font-bold px-6 py-3.5 rounded-xl flex items-center gap-2 transition-all shadow-lg text-sm whitespace-nowrap ${
               totalPrice > 0 ? 'bg-gold-400 text-navy-900 hover:brightness-105 active:scale-95 shadow-gold-400/20' : 'bg-navy-100 text-navy-400 pointer-events-none'
