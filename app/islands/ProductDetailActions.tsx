@@ -18,7 +18,7 @@ export default function ProductDetailActions({ product, isLoggedIn }: { product:
 
     // Set item langsung untuk di-checkout
     localStorage.setItem('butikemas_checkout_items', JSON.stringify([checkoutItem]))
-    window.location.href = '/checkout'
+    window.location.href = '/customer/checkout'
   }
 
   const handleAddToCart = () => {
