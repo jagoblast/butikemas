@@ -15,7 +15,8 @@ const Minus = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" v
 const Plus = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 const Tag = ({ className }: { className: string }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
 
-export default function CartView() {
+// Menambahkan props isLoggedIn untuk mengecek status autentikasi dari Server
+export default function CartView({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   const waLink = 'https://wa.me/6281234567890?text=Halo%20admin,%20saya%20butuh%20bantuan%20terkait%20keranjang%20belanja.'
   const [items, setItems] = useState<any[]>([])
 
@@ -27,7 +28,6 @@ export default function CartView() {
   useEffect(() => {
     const storedItems = readCartItems()
     setItems(storedItems)
-    // Pengecekan document.cookie dihapus dari sini
   }, [])
 
   function persistItems(nextItems: any[]) {
@@ -40,7 +40,7 @@ export default function CartView() {
   const selectedItems = items.filter((item) => item.checked)
   const selectedCount = selectedItems.reduce((sum, item) => sum + item.quantity, 0)
   
-  // Asumsi product.price dari database (Diubah dari totalPrice agar kompatibel dengan data yang kita save sebelumnya)
+  // Asumsi product.price dari database 
   const subtotalPrice = selectedItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
   
   // Mock Voucher Logik (Bisa dihidupkan jika API siap)
@@ -69,11 +69,22 @@ export default function CartView() {
     const nextItems = items.filter((item) => item.product.id !== id)
     persistItems(nextItems)
     saveCheckoutItems(nextItems.filter((item) => item.checked))
-    window.dispatchEvent(new Event('cartUpdated')) // Update navbar jika ada
+    window.dispatchEvent(new Event('cartUpdated')) 
   }
 
-  function prepareCheckout() {
+  // Modifikasi alur Checkout
+  function handleCheckoutClick() {
+    if (selectedCount === 0) return
+
+    // Jika belum login, redirect ke halaman login dan berikan parameter redirect
+    if (!isLoggedIn) {
+      window.location.href = '/login?redirect=/cart'
+      return
+    }
+
+    // Jika sudah login, simpan item dan lanjut ke halaman checkout
     saveCheckoutItems(selectedItems)
+    window.location.href = '/checkout'
   }
 
   return (
@@ -180,15 +191,17 @@ export default function CartView() {
               <span className="font-heading text-xl font-bold text-gold-600 leading-none">{formatRupiah(totalPrice)}</span>
             </div>
           </div>
-          <a
-            href="/checkout"
-            onClick={prepareCheckout}
+          
+          {/* Diubah dari <a> menjadi <button> agar bisa menjalankan validasi JS */}
+          <button
+            onClick={handleCheckoutClick}
+            disabled={totalPrice === 0}
             className={`font-bold px-6 py-3.5 rounded-xl flex items-center gap-2 transition-all shadow-lg text-sm whitespace-nowrap ${
               totalPrice > 0 ? 'bg-gold-400 text-navy-900 hover:brightness-105 active:scale-95 shadow-gold-400/20' : 'bg-navy-100 text-navy-400 pointer-events-none'
             }`}
           >
             Checkout ({selectedCount})
-          </a>
+          </button>
         </div>
       </div>
     </div>
