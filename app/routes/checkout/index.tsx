@@ -4,30 +4,35 @@ import { verify } from 'hono/jwt'
 import CheckoutView from '../../islands/CheckoutView'
 
 export default createRoute(async (c) => {
-  // 1. Ambil token dari cookie sesi pelanggan
   const token = getCookie(c, 'customer_session')
   
-  // Jika tidak ada cookie, lempar ke login
+  // 1. CEK APAKAH COOKIE MASUK KE SERVER
   if (!token) {
+    console.error("🚨 DEBUG CHECKOUT: Token tidak ditemukan! Browser tidak mengirimkan cookie 'customer_session'.")
     return c.redirect('/login?redirect=/checkout')
   }
 
   let payload;
   try {
-    // 2. Verifikasi token secara mandiri menggunakan JWT_SECRET
+    // 2. CEK APAKAH VERIFIKASI BERHASIL
+    if (!c.env.JWT_SECRET) {
+      console.error("🚨 DEBUG CHECKOUT: c.env.JWT_SECRET kosong/undefined di route ini!")
+    }
     payload = await verify(token, c.env.JWT_SECRET)
   } catch (error) {
-    // Jika token expired atau tidak valid (dimanipulasi), lempar ke login
+    console.error("🚨 DEBUG CHECKOUT: Verifikasi token gagal!", error)
     return c.redirect('/login?redirect=/checkout')
   }
 
-  // 3. Ambil detail profil pelanggan dari database (Untuk Alamat Pengiriman) menggunakan id dari payload
   const customer = await c.env.DB.prepare(
     'SELECT name, email, phone, address FROM users WHERE id = ?'
   ).bind(payload.id).first()
 
+  if (!customer) {
+     console.error("🚨 DEBUG CHECKOUT: User ID di dalam token tidak ditemukan di database!")
+  }
+
   return c.render(
-    // Lempar data pelanggan ke Island Checkout
     <CheckoutView customer={customer} />,
     { title: 'Checkout Pesanan' }
   )
