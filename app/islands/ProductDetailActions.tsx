@@ -1,42 +1,56 @@
-import { useState, useEffect } from 'hono/jsx'
+import { useState } from 'hono/jsx'
 
-export default function ProductDetailActions({ product }: { product: any }) {
-  // Hapus state isLoggedIn dan useEffect pengecekan document.cookie
+// Terima props isLoggedIn
+export default function ProductDetailActions({ product, isLoggedIn }: { product: any, isLoggedIn: boolean }) {
+  const [quantity, setQuantity] = useState(1)
 
-  // Ikon Gembok (Lock)
-  const Lock = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  const handleBuyNow = () => {
+    // Validasi login menggunakan props dari Server
+    if (!isLoggedIn) {
+      window.location.href = `/login?redirect=/products/${product.slug}`
+      return
+    }
 
-  function handleAddToCart() {
-    const cart = JSON.parse(localStorage.getItem('butikemas_cart') || '[]')
-    const index = cart.findIndex((item: any) => item.product.id === product.id)
-    if (index > -1) cart[index].quantity += 1
-    else cart.push({ product, quantity: 1, checked: true })
-    localStorage.setItem('butikemas_cart', JSON.stringify(cart))
-    alert("Produk berhasil ditambahkan ke keranjang!")
+    const checkoutItem = {
+      product: product,
+      quantity: quantity
+    }
+
+    // Set item langsung untuk di-checkout
+    localStorage.setItem('butikemas_checkout_items', JSON.stringify([checkoutItem]))
+    window.location.href = '/checkout'
   }
 
-  function handleBuyNow() {
-    localStorage.setItem('butikemas_checkout_items', JSON.stringify([{ product, quantity: 1, checked: true }]))
+  const handleAddToCart = () => {
+    // Tambah ke keranjang logic...
+    const currentCart = JSON.parse(localStorage.getItem('butikemas_cart') || '[]')
+    const existingIdx = currentCart.findIndex((item: any) => item.product.id === product.id)
+    
+    if (existingIdx > -1) {
+      currentCart[existingIdx].quantity += quantity
+    } else {
+      currentCart.push({ product, quantity })
+    }
+    
+    localStorage.setItem('butikemas_cart', JSON.stringify(currentCart))
+    window.dispatchEvent(new Event('cartUpdated'))
+    alert('Produk ditambahkan ke keranjang!')
   }
 
   return (
-    <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-      <div className="max-w-7xl mx-auto flex gap-4">
-        <button 
-          onClick={handleAddToCart}
-          className="flex-1 py-3.5 px-4 bg-white border border-navy-900 text-navy-900 text-sm font-bold rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          Tambah ke Keranjang
-        </button>
-        {/* UBAH href menjadi statis /checkout?mode=buy-now */}
-        <a 
-          href="/checkout?mode=buy-now"
-          onClick={handleBuyNow}
-          className="flex-1 py-3.5 px-4 bg-[#D4A84B] text-navy-900 text-sm font-bold rounded-lg hover:bg-[#c2963a] transition-colors flex items-center justify-center gap-2 uppercase tracking-wide"
-        >
-          <Lock /> BELI SEKARANG
-        </a>
-      </div>
+    <div className="flex gap-4 mt-6">
+      <button 
+        onClick={handleAddToCart}
+        className="flex-1 border-2 border-gold-500 text-gold-600 font-bold py-3 rounded-xl hover:bg-gold-50 transition-colors"
+      >
+        Tambah Keranjang
+      </button>
+      <button 
+        onClick={handleBuyNow}
+        className="flex-1 bg-gold-500 text-navy-900 font-bold py-3 rounded-xl hover:bg-gold-600 transition-colors"
+      >
+        Beli Langsung
+      </button>
     </div>
   )
 }
