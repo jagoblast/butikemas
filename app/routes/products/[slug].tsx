@@ -1,11 +1,10 @@
 import { createRoute } from 'honox/factory'
-import { getCookie } from 'hono/cookie' // <-- 1. Tambahkan import getCookie
+import { getCookie } from 'hono/cookie'
 import ProductDetailActions from '../../islands/ProductDetailActions'
 
 export default createRoute(async (c) => {
   const slug = c.req.param('slug')
 
-  // 1. Ambil Data Produk & Kategori
   const product = await c.env.DB.prepare(`
     SELECT p.*, c.name as category_name 
     FROM products p
@@ -23,7 +22,6 @@ export default createRoute(async (c) => {
     )
   }
 
-  // 2. Ambil Gambar Produk
   const { results: imagesData } = await c.env.DB.prepare(`
     SELECT image_url FROM product_images 
     WHERE product_id = ? 
@@ -31,7 +29,6 @@ export default createRoute(async (c) => {
   `).bind(product.id).all()
   const images = imagesData.map((img: any) => img.image_url)
 
-  // 3. Ambil Ulasan Pelanggan & Kalkulasi Rating
   const { results: reviews } = await c.env.DB.prepare(`
     SELECT r.*, u.name as reviewer_name 
     FROM reviews r
@@ -46,7 +43,6 @@ export default createRoute(async (c) => {
     WHERE product_id = ? AND is_hidden = 0
   `).bind(product.id).first() || { avg_rating: 5, review_count: 0 }
 
-  // 4. Ambil Produk Terkait
   const { results: relatedProducts } = await c.env.DB.prepare(`
     SELECT p.*, 
       (SELECT image_url FROM product_images pi WHERE pi.product_id = p.id ORDER BY is_primary DESC LIMIT 1) as image_url
@@ -55,16 +51,11 @@ export default createRoute(async (c) => {
     LIMIT 4
   `).bind(product.category_id, product.id).all()
 
-  // 5. Cek status login dari Server menggunakan Cookie yang aman (HttpOnly)
-  const isLoggedIn = !!getCookie(c, 'customer_session') // <-- 2. Cek Sesi
-
-  // Helpers
   const formatRupiah = (angka: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka)
   const formatReviewDate = (dateStr: string) => {
     return new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(dateStr))
   }
 
-  // Komponen Ikon (Lucide JSX)
   const ShoppingCartFallback = () => <svg className="h-14 w-14 opacity-50" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
   const ShieldCheck = () => <svg className="w-8 h-8 text-gold-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2-1 4-2 7-2 2.89 0 5.26 1 7 2a1 1 0 0 1 1 1v7z"/><path d="m9 12 2 2 4-4"/></svg>
   const ChevronRight = () => <svg className="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
@@ -73,12 +64,13 @@ export default createRoute(async (c) => {
   const displayRating = Number(avg_rating) || 5
   const roundedRating = Math.round(displayRating)
 
+  // Cek Status Login di Server!
+  const isLoggedIn = !!getCookie(c, 'customer_session')
+
   return c.render(
     <div className="bg-surface min-h-screen">
       <main className="container-main py-8 pb-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16">
-          
-          {/* =========== BAGIAN KIRI: GAMBAR PRODUK =========== */}
           <section className="space-y-4">
             <div className="aspect-square bg-white border border-navy-100 rounded-2xl overflow-hidden flex items-center justify-center p-8 shadow-sm relative">
               {images[0] ? (
@@ -101,7 +93,6 @@ export default createRoute(async (c) => {
             )}
           </section>
 
-          {/* =========== BAGIAN KANAN: DETAIL PRODUK =========== */}
           <section className="space-y-6">
             <div>
               <span className="inline-block px-3 py-1 bg-navy-900 text-gold-400 rounded-md text-[10px] font-bold mb-3 uppercase tracking-widest">
@@ -115,11 +106,9 @@ export default createRoute(async (c) => {
               </div>
             </div>
 
-            {/* Tombol Aksi Keranjang / Beli (Island Component) */}
-            {/* 3. Lempar props isLoggedIn ke Island Frontend */}
+            {/* TERUSKAN isLoggedIn KE KOMPONEN ACTIONS */}
             <ProductDetailActions product={product} isLoggedIn={isLoggedIn} />
 
-            {/* Spek Kadar, Berat, Stok */}
             <div className="grid grid-cols-3 gap-4 py-6 border-y border-navy-200">
               {[
                 { label: 'Kadar', value: product.kadar || '-' },
@@ -133,7 +122,6 @@ export default createRoute(async (c) => {
               ))}
             </div>
 
-            {/* Sertifikat LBMA */}
             <div className="bg-white border border-navy-200 p-4 rounded-xl flex items-center gap-4 shadow-sm">
               <ShieldCheck />
               <div>
@@ -142,7 +130,6 @@ export default createRoute(async (c) => {
               </div>
             </div>
 
-            {/* Deskripsi */}
             <div>
               <h2 className="font-heading text-lg font-bold text-navy-900 mb-3 border-b border-navy-200 pb-2">Deskripsi</h2>
               <div className="text-navy-700 text-sm leading-relaxed space-y-4">
@@ -155,7 +142,6 @@ export default createRoute(async (c) => {
               </div>
             </div>
 
-            {/* Ulasan Pelanggan */}
             <div className="pt-8 border-t border-navy-200">
               <div className="mb-6 flex flex-col gap-3 border-b border-navy-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="font-heading text-2xl font-bold text-navy-900">Ulasan Pelanggan</h2>
@@ -198,7 +184,6 @@ export default createRoute(async (c) => {
           </section>
         </div>
 
-        {/* =========== SECTION BAWAH: PRODUK TERKAIT =========== */}
         {relatedProducts.length > 0 && (
           <section className="mt-16">
             <div className="flex items-center justify-between mb-6">
