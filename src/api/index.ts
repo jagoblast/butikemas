@@ -16,6 +16,8 @@ import metalPricesApi from './metal-prices'
 import paymentMethodsApi from './payment-methods'
 import vouchersApi from './vouchers'
 import shippingApi from './shipping' // <-- Integrasi RajaOngkir
+import webhookApi from './webhook' // <-- Integrasi Webhook Payment Gateway (Omnipaygate)
+import settingsApi from './settings' // <-- Integrasi Pengaturan Sistem (Simpan API Keys)
 
 // Inisialisasi API Utama dengan tipe Bindings Cloudflare
 const api = new Hono<{ Bindings: Env['Bindings'] }>()
@@ -27,9 +29,10 @@ const api = new Hono<{ Bindings: Env['Bindings'] }>()
 // Gerbang Autentikasi Login/Register
 api.route('/auth', authApi)
 
-// Transaksi & Ongkos Kirim Publik
+// Transaksi, Webhook & Ongkos Kirim Publik
 api.route('/public/checkout', checkoutApi)
 api.route('/public/shipping', shippingApi) 
+api.route('/webhook', webhookApi) // <-- Endpoint otomatis untuk menerima callback dari Payment Gateway
 
 // Katalog & Konten Publik
 api.route('/public/products', productsApi)
@@ -70,6 +73,7 @@ api.use('/customer/*', async (c, next) => {
 
 // Manajemen Sistem & Upload File
 api.route('/admin/upload', uploadApi)
+api.route('/admin/settings', settingsApi) // <-- Endpoint untuk menyimpan konfigurasi API Keys dari AdminPanel
 
 // Manajemen Transaksi & Pelanggan
 api.route('/admin/orders', ordersApi)
@@ -92,6 +96,5 @@ api.route('/admin/payment-methods', paymentMethodsApi)
 // Portal Pelanggan
 api.route('/customer/orders', ordersApi)
 api.route('/customer/profile', customersApi)
-
 
 export default api
