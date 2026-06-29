@@ -60,8 +60,11 @@ export default function CheckoutView({ customer }: { customer: any }) {
         shipping_address: customer?.address || '',
         payment_method: paymentMethod, 
         shipping_method: shippingMethod,
+        total_amount: grandTotal, // TAMBAHKAN INI!
         items: items.map(item => ({
           product_id: item.product.id,
+          product_name: item.product.name, // TAMBAHKAN INI UNTUK DB BACKEND
+          price: item.product.price,       // TAMBAHKAN INI UNTUK DB BACKEND
           quantity: item.quantity
         }))
       }
