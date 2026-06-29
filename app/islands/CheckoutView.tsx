@@ -65,7 +65,7 @@ export default function CheckoutView({ customer }: { customer: any }) {
           product_id: item.product.id,
           product_name: item.product.name, // TAMBAHKAN INI UNTUK DB BACKEND
           price: item.product.price,       // TAMBAHKAN INI UNTUK DB BACKEND
-          quantity: item.quantity
+          quantity: item.quantity,
           product_image: item.product.image_url || item.product.images?.[0]?.image_url || ''
         }))
       }
