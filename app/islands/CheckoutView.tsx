@@ -131,7 +131,7 @@ export default function CheckoutView({ customer }: { customer: any }) {
             {items.map((item, idx) => (
               <div key={idx} className="flex gap-4 items-center pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                 <div className="w-16 h-16 bg-surface rounded-lg border border-navy-100 p-1 flex items-center justify-center shrink-0">
-                  <img src={item.product.image_url || 'https://emas.pasdigi.id/images/lm.png'} alt={item.product.name} className="object-contain w-full h-full" />
+                  <img src={item.product.image_url || item.product.images?.[0]?.image_url || 'https://emas.pasdigi.id/images/metal-gold.jpg'} alt={item.product.name} className="object-contain w-full h-full" />
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-navy-900 text-sm">{item.product.name}</p>
