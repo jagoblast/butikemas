@@ -2,7 +2,13 @@ import { Hono } from 'hono'
 import { sign } from 'hono/jwt'
 import { setCookie, deleteCookie } from 'hono/cookie'
 
-const authApi = new Hono<{ Bindings: Env['Bindings'] }>()
+// 1. Definisikan tipe Bindings agar TypeScript tahu struktur env Anda
+type Bindings = {
+  DB: D1Database
+  JWT_SECRET: string
+}
+
+const authApi = new Hono<{ Bindings: Bindings }>()
 
 // ==========================================
 // 🔐 FUNGSI KRIPTOGRAFI PASSWORD EDGE
@@ -24,9 +30,10 @@ authApi.post('/login', async (c) => {
   const { email, password } = await c.req.json()
 
   // 1. Cari User berdasarkan Email
+  // (Tambahkan generic <any> atau interface User agar TS tidak error saat membaca properti)
   const user = await c.env.DB.prepare(
     'SELECT * FROM users WHERE email = ?'
-  ).bind(email).first()
+  ).bind(email).first<any>()
 
   if (!user) {
     return c.json({ success: false, message: 'Email tidak ditemukan.' }, 401)
@@ -41,24 +48,25 @@ authApi.post('/login', async (c) => {
     return c.json({ success: false, message: 'Kata sandi salah.' }, 401)
   }
 
-  // 3. Buat JWT Token
+  // 3. Buat JWT Token (Sistem Stateless)
   const payload = {
     id: user.id,
     role: user.role,
     exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // 24 Jam
   }
 
+  // 4. SIGN JWT DENGAN ALG HS256 SECARA EKSPLISIT
   const token = await sign(payload, c.env.JWT_SECRET, 'HS256')
 
-  // 4. Set Cookie Dinamis
+  // 5. Set Cookie Dinamis
   const cookieName = user.role === 'ADMIN' ? 'admin_session' : 'customer_session'
 
   setCookie(c, cookieName, token, {
     path: '/',
     secure: true,
     httpOnly: true,
-    maxAge: 60 * 60 * 24,
-    sameSite: 'Lax' // <-- PERBAIKAN: Harus Lax untuk sistem web dengan sistem Redirect Navigasi
+    maxAge: 60 * 60 * 24, // Sesuai dengan masa berlaku JWT (24 Jam)
+    sameSite: 'Lax' // <-- Harus Lax agar redirect aman dan cookie tetap dikirim
   })
 
   return c.json({ 
@@ -67,7 +75,6 @@ authApi.post('/login', async (c) => {
     role: user.role 
   })
 })
-
 
 // ==========================================
 // ENDPOINT REGISTRASI BARU (Khusus Customer)
