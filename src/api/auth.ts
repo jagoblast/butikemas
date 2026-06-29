@@ -2,7 +2,6 @@ import { Hono } from 'hono'
 import { sign } from 'hono/jwt'
 import { setCookie, deleteCookie } from 'hono/cookie'
 
-// 1. Definisikan tipe Bindings agar TypeScript tahu struktur env Anda
 type Bindings = {
   DB: D1Database
   JWT_SECRET: string
@@ -10,11 +9,6 @@ type Bindings = {
 
 const authApi = new Hono<{ Bindings: Bindings }>()
 
-// ==========================================
-// 🔐 FUNGSI KRIPTOGRAFI PASSWORD EDGE
-// ==========================================
-// Menggunakan Web Crypto API bawaan browser/V8 (Tanpa perlu install library berat).
-// Ditambah 'secret salt' agar aman dari serangan Rainbow Table.
 async function hashPassword(password: string, secret: string) {
   const encoder = new TextEncoder()
   const data = encoder.encode(password + secret)
@@ -23,14 +17,9 @@ async function hashPassword(password: string, secret: string) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-// ==========================================
-// ENDPOINT LOGIN (Mendukung Admin & Customer)
-// ==========================================
 authApi.post('/login', async (c) => {
   const { email, password } = await c.req.json()
 
-  // 1. Cari User berdasarkan Email
-  // (Tambahkan generic <any> atau interface User agar TS tidak error saat membaca properti)
   const user = await c.env.DB.prepare(
     'SELECT * FROM users WHERE email = ?'
   ).bind(email).first<any>()
@@ -39,34 +28,32 @@ authApi.post('/login', async (c) => {
     return c.json({ success: false, message: 'Email tidak ditemukan.' }, 401)
   }
 
-  // 2. Validasi Kriptografi Password
-  // Lakukan hash pada input user, lalu bandingkan dengan hash di database
   const inputHash = await hashPassword(password, c.env.JWT_SECRET)
-  const isPasswordValid = inputHash === user.password_hash
-
-  if (!isPasswordValid) {
+  
+  if (inputHash !== user.password_hash) {
     return c.json({ success: false, message: 'Kata sandi salah.' }, 401)
   }
 
-  // 3. Buat JWT Token (Sistem Stateless)
   const payload = {
     id: user.id,
     role: user.role,
-    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 // 24 Jam
+    exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 
   }
 
-  // 4. SIGN JWT DENGAN ALG HS256 SECARA EKSPLISIT
   const token = await sign(payload, c.env.JWT_SECRET, 'HS256')
 
-  // 5. Set Cookie Dinamis
-  const cookieName = user.role === 'ADMIN' ? 'admin_session' : 'customer_session'
+  // PERBAIKAN 1: Nama Cookie BARU
+  const cookieName = user.role === 'ADMIN' ? 'butik_admin_session' : 'butik_cust_session'
+
+  // PERBAIKAN 2: Deteksi HTTPS (Jika jalan di Localhost HTTP, jadikan false)
+  const isSecureMode = new URL(c.req.url).protocol === 'https:'
 
   setCookie(c, cookieName, token, {
     path: '/',
-    secure: true,
+    secure: isSecureMode, // <-- Lebih pintar
     httpOnly: true,
-    maxAge: 60 * 60 * 24, // Sesuai dengan masa berlaku JWT (24 Jam)
-    sameSite: 'Lax' // <-- Harus Lax agar redirect aman dan cookie tetap dikirim
+    maxAge: 60 * 60 * 24,
+    sameSite: 'Lax'
   })
 
   return c.json({ 
@@ -76,13 +63,9 @@ authApi.post('/login', async (c) => {
   })
 })
 
-// ==========================================
-// ENDPOINT REGISTRASI BARU (Khusus Customer)
-// ==========================================
 authApi.post('/register', async (c) => {
   const { name, email, phone, password } = await c.req.json()
 
-  // 1. Validasi Keunikan Email
   const existingUser = await c.env.DB.prepare(
     'SELECT id FROM users WHERE email = ?'
   ).bind(email).first()
@@ -91,11 +74,9 @@ authApi.post('/register', async (c) => {
     return c.json({ success: false, message: 'Email sudah terdaftar. Silakan login.' }, 400)
   }
 
-  // 2. HASH PASSWORD SEBELUM DISIMPAN (Production Ready!)
   const passwordHash = await hashPassword(password, c.env.JWT_SECRET)
 
   try {
-    // 3. Eksekusi ke D1
     await c.env.DB.prepare(
       `INSERT INTO users (id, name, email, phone, password_hash, role, is_active) 
        VALUES (lower(hex(randomblob(16))), ?, ?, ?, ?, 'CUSTOMER', 1)`
@@ -108,15 +89,10 @@ authApi.post('/register', async (c) => {
   }
 })
 
-// ==========================================
-// ENDPOINT LOGOUT (MENGHAPUS SESI)
-// ==========================================
 authApi.get('/logout', async (c) => {
-  // Wajib hapus cookie untuk kedua role dengan path '/' agar browser menghapusnya dari semua rute
-  deleteCookie(c, 'customer_session', { path: '/' })
-  deleteCookie(c, 'admin_session', { path: '/' })
-  
-  // Arahkan kembali ke halaman login
+  // Hapus cookie dengan nama BARU
+  deleteCookie(c, 'butik_cust_session', { path: '/' })
+  deleteCookie(c, 'butik_admin_session', { path: '/' })
   return c.redirect('/login')
 })
 
