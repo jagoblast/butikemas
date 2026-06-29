@@ -17,9 +17,27 @@ export default function AdminCategoryList() {
       })
   }, [])
 
-  if (loading) {
-    return <div className="p-12 text-center text-gray-500 animate-pulse font-medium">Memuat data kategori...</div>
+  // FUNGSI UNTUK MENGHAPUS KATEGORI
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Yakin ingin menghapus kategori ini?')) return;
+    
+    try {
+      const res = await fetch(`/api/admin/categories/${id}`, { method: 'DELETE' })
+      const data = await res.json()
+      
+      if (res.ok && data.success) {
+        // Hapus dari state agar tabel langsung terupdate tanpa perlu refresh
+        setCategories(categories.filter(c => c.id !== id))
+        alert('Kategori berhasil dihapus')
+      } else {
+        alert(data.message || 'Gagal menghapus kategori')
+      }
+    } catch (error) {
+      alert('Terjadi kesalahan jaringan')
+    }
   }
+
+  if (loading) return <div className="p-12 text-center text-gray-500 animate-pulse font-medium">Memuat data kategori...</div>
 
   return (
     <div className="overflow-x-auto">
@@ -29,11 +47,12 @@ export default function AdminCategoryList() {
             <th className="px-6 py-4 font-bold tracking-wider">Kategori</th>
             <th className="px-6 py-4 font-bold tracking-wider">Slug URL</th>
             <th className="px-6 py-4 font-bold tracking-wider">Deskripsi</th>
+            <th className="px-6 py-4 font-bold tracking-wider text-right">Aksi</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {categories.length === 0 ? (
-            <tr><td colSpan={3} className="px-6 py-8 text-center text-gray-500">Belum ada kategori.</td></tr>
+            <tr><td colSpan={4} className="px-6 py-8 text-center text-gray-500">Belum ada kategori.</td></tr>
           ) : categories.map((cat) => (
             <tr key={cat.id} className="bg-white hover:bg-gray-50 transition-colors">
               <td className="px-6 py-4">
@@ -51,6 +70,22 @@ export default function AdminCategoryList() {
               <td className="px-6 py-4 font-mono text-xs text-gray-600">{cat.slug}</td>
               <td className="px-6 py-4">
                 <p className="truncate max-w-[250px]" title={cat.description}>{cat.description || '-'}</p>
+              </td>
+              
+              {/* TOMBOL EDIT DAN HAPUS */}
+              <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                <a 
+                  href={`/admin/categories/${cat.id}`} 
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors border border-blue-100"
+                >
+                  Edit
+                </a>
+                <button 
+                  onClick={() => handleDelete(cat.id)}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100"
+                >
+                  Hapus
+                </button>
               </td>
             </tr>
           ))}
