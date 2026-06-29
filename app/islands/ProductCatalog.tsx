@@ -46,16 +46,46 @@ export default function ProductCatalog({ initialProducts, categories: rawCategor
     return () => document.removeEventListener('mousedown', handleOutside)
   }, [])
 
+  // Fungsi Helper Kalkulasi Promo Asli dari Database
+  const getPromoDetails = (product: any) => {
+    if (!product.promo_discount_value) return null;
+    
+    let discountAmount = 0;
+    let discountStr = '';
+    
+    if (product.promo_discount_type === 'PERCENTAGE') {
+      discountAmount = product.price * (product.promo_discount_value / 100);
+      if (product.promo_max_discount && discountAmount > product.promo_max_discount) {
+        discountAmount = product.promo_max_discount;
+      }
+      discountStr = `-${product.promo_discount_value}%`;
+    } else {
+      discountAmount = product.promo_discount_value;
+      discountStr = `-Rp ${formatCount(product.promo_discount_value)}`;
+    }
+    
+    const finalPrice = Math.max(0, product.price - discountAmount);
+    return { 
+      finalPrice, 
+      discountStr, 
+      originalPrice: product.price, 
+      promoName: product.promo_name || 'Promo Spesial' 
+    };
+  }
+
   const filtered = initialProducts
     .filter((p) => category === 'all' || p.category_id === category)
     .filter((p) => p.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
-      // Mocking promo logic for sorting just like the API would
-      const priceA = a.price
-      const priceB = b.price
+      // Pastikan sorting menggunakan HARGA FINAL setelah dipotong promo (jika ada)
+      const promoA = getPromoDetails(a);
+      const promoB = getPromoDetails(b);
+      const priceA = promoA ? promoA.finalPrice : a.price;
+      const priceB = promoB ? promoB.finalPrice : b.price;
+
       if (sort === 'price-asc') return priceA - priceB
       if (sort === 'price-desc') return priceB - priceA
-      if (sort === 'bestseller') return (b.stock + 1200) - (a.stock + 1200) // Mock sold count
+      if (sort === 'bestseller') return ((b.stock + 1200) || 0) - ((a.stock + 1200) || 0)
       if (sort === 'newest') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       return 0
     })
@@ -133,19 +163,21 @@ export default function ProductCatalog({ initialProducts, categories: rawCategor
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filtered.map((product, index) => {
+          {filtered.map((product) => {
             const isOutOfStock = product.stock === 0
-            // Simulasi Promo: Anggap produk ke-2 (index 1) sedang promo agar desain shadow emasnya terlihat
-            const hasVoucherPrice = index === 1 
-            const originalPrice = product.price + 500000
+            
+            // LOGIKA PROMO NYATA (Bukan Dummy Lagi!)
+            const promo = getPromoDetails(product)
+            const hasPromo = promo !== null
+
             const displayRating = Number(product.display_rating) || 5
-            const soldCount = product.stock + 1200 // Mock
+            const soldCount = product.stock + 1200 // Mock indikator terjual, bisa diganti nanti
 
             return (
               <article
                 key={product.id}
                 className={`group overflow-hidden rounded-2xl border bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
-                  hasVoucherPrice
+                  hasPromo
                     ? 'border-2 border-gold-400 bg-[linear-gradient(180deg,#FFF1C2_0%,#FFFFFF_44%,#FFF9EA_100%)] shadow-[0_18px_42px_-18px_rgba(212,168,75,0.9)] ring-2 ring-gold-100/90 hover:shadow-[0_22px_52px_-18px_rgba(184,145,47,0.95)]'
                     : 'border-navy-100/80 hover:shadow-navy-100/70'
                 }`}
@@ -157,13 +189,13 @@ export default function ProductCatalog({ initialProducts, categories: rawCategor
                       alt={product.name}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className={`absolute right-3 top-3 truncate rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-navy-900 shadow-sm ${hasVoucherPrice ? 'max-w-[58%]' : 'max-w-[75%]'}`}>
+                    <div className={`absolute right-3 top-3 truncate rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-navy-900 shadow-sm ${hasPromo ? 'max-w-[58%]' : 'max-w-[75%]'}`}>
                       {product.category_name || 'Kategori'}
                     </div>
-                    {hasVoucherPrice && (
+                    {hasPromo && (
                       <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-gradient-to-r from-gold-500 via-gold-400 to-gold-300 px-3 py-2 text-[11px] font-extrabold uppercase text-navy-900 shadow-lg shadow-navy-900/20">
-                        <span className="inline-flex items-center gap-1"><BadgePercent className="h-3.5 w-3.5" /> Promo</span>
-                        <span className="shrink-0 rounded-full bg-white/90 px-2 py-0.5 text-[10px] text-[#2E7D32]">-Rp 500Rb</span>
+                        <span className="inline-flex items-center gap-1 truncate"><BadgePercent className="shrink-0 h-3.5 w-3.5" /> {promo.promoName}</span>
+                        <span className="shrink-0 rounded-full bg-white/90 px-2 py-0.5 text-[10px] text-[#2E7D32]">{promo.discountStr}</span>
                       </div>
                     )}
                     {isOutOfStock && (
@@ -189,17 +221,17 @@ export default function ProductCatalog({ initialProducts, categories: rawCategor
                       {product.name}
                     </h3>
 
-                    <div className={`pt-1 flex flex-col justify-end min-h-[40px] ${hasVoucherPrice ? 'px-0.5' : ''}`}>
-                      {hasVoucherPrice ? (
+                    <div className={`pt-1 flex flex-col justify-end min-h-[40px] ${hasPromo ? 'px-0.5' : ''}`}>
+                      {hasPromo ? (
                         <p className="mb-1 text-[11px] font-semibold leading-tight text-[#888888] line-through">
-                          {formatRupiah(originalPrice)}
+                          {formatRupiah(promo.originalPrice)}
                         </p>
                       ) : (
                         <div className="h-[11px] mb-0.5" aria-hidden="true" />
                       )}
                       <div className="flex flex-wrap items-center gap-1.5">
                         <p className="text-[18px] font-extrabold text-gold-700 leading-tight">
-                          {formatRupiah(product.price)}
+                          {formatRupiah(hasPromo ? promo.finalPrice : product.price)}
                         </p>
                       </div>
                     </div>
