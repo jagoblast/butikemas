@@ -2,34 +2,41 @@ import { createRoute } from 'honox/factory'
 import { getCookie, deleteCookie } from 'hono/cookie'
 import { verify } from 'hono/jwt'
 
-export default createRoute(async (c, next) => {
-  // 1. Ambil token dari cookie
-  const token = getCookie(c, 'customer_session')
+// PERBAIKAN: Beritahu TypeScript bahwa middleware ini punya akses ke Bindings (Env Vars)
+type Env = {
+  Bindings: {
+    JWT_SECRET: string
+  }
+  Variables: {
+    jwtPayload: any
+  }
+}
+
+export default createRoute<Env>(async (c, next) => {
+  // 1. GUNAKAN NAMA COOKIE BARU: 'butik_cust_session' (Bypass cache lama browser)
+  const token = getCookie(c, 'butik_cust_session')
 
   if (!token) {
-    // Jika tidak ada token sama sekali, lempar ke login
     return c.redirect(`/login?redirect=${encodeURIComponent(c.req.path)}`)
   }
 
   try {
-    // 2. VERIFIKASI JWT SECARA EKSPLISIT
-    // Memastikan token valid, belum expired, dan ditandatangani dengan algoritma HS256
-    const decodedPayload = await verify(token, c.env.JWT_SECRET, 'HS256')
-    
-    // (Opsional) Simpan data user ke context agar bisa diakses di route handler
-    c.set('jwtPayload', decodedPayload)
+    // 2. CEK FATAL ERROR: Pastikan JWT_SECRET benar-benar terbaca di production!
+    if (!c.env.JWT_SECRET) {
+      return c.html('<h1>[FATAL ERROR] JWT_SECRET hilang atau tidak diset di Environment Variables (Cloudflare Pages)!</h1>', 500)
+    }
 
-    // Lanjut render halaman checkout/orders
+    // 3. Verifikasi secara ketat
+    const decodedPayload = await verify(token, c.env.JWT_SECRET, 'HS256')
+    c.set('jwtPayload', decodedPayload)
+    
     await next()
 
   } catch (error) {
-    // 3. JIKA TOKEN TIDAK VALID ATAU EXPIRED
-    console.error("JWT Verification failed:", error)
+    console.error("⚠️ JWT Verification failed di Middleware:", error)
     
-    // Hapus cookie yang sudah usang/rusak agar tidak menyangkut di browser
-    deleteCookie(c, 'customer_session', { path: '/' })
-    
-    // Lempar kembali ke login
+    // Hapus cookie BARU karena kedaluwarsa atau dimanipulasi
+    deleteCookie(c, 'butik_cust_session', { path: '/' })
     return c.redirect(`/login?redirect=${encodeURIComponent(c.req.path)}`)
   }
 })
