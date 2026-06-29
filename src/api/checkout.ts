@@ -68,14 +68,18 @@ checkoutApi.post('/', async (c) => {
       }, 400)
     }
 
-    // PERBAIKAN: Gunakan 'user_id', dan tambahkan field NOT NULL lainnya seperti shipping_cost, grand_total, dll.
+    // PENAMBAHAN: Variabel untuk config JSON
+    const paymentConfigString = JSON.stringify(gatewayData.data)
+
+    // PERBAIKAN: Gunakan 'user_id', dan tambahkan field NOT NULL lainnya,
+    // SERTA tambahkan payment_method_config ke dalam query INSERT.
     await c.env.DB.prepare(
       `INSERT INTO orders (
         id, user_id, customer_name, customer_email, customer_phone, 
         total_amount, grand_total, shipping_cost, shipping_address, shipping_city,
-        payment_method, status
+        payment_method, payment_method_config, status
       ) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`
     ).bind(
       orderId, 
       customerId, // Mengganti customer_id menjadi user_id sesuai DB
@@ -87,7 +91,8 @@ checkoutApi.post('/', async (c) => {
       0, // shipping_cost (sementara hardcode 0 atau lempar dari frontend)
       shipping_address || 'Alamat tidak diatur', // shipping_address
       '-', // shipping_city
-      method
+      method,
+      paymentConfigString // <-- PENAMBAHAN DI SINI
     ).run()
 
     for (const item of items) {
