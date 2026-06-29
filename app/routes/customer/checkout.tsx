@@ -10,11 +10,14 @@ export default createRoute<Env>(async (c) => {
   // 1. Ambil payload dari middleware (customer/_middleware.ts)
   const payload = c.get('jwtPayload')
   
-  // 2. Tarik data user dari Database
-  // Menggunakan payload.id yang sudah diverifikasi oleh middleware
-  const customer: any = await c.env.DB.prepare(
-    'SELECT id, name, email, phone FROM users WHERE id = ?'
-  ).bind(payload.id).first()
+  // 2. Tarik data user dari Database beserta Alamat Default
+  // PERBAIKAN: Gunakan LEFT JOIN ke tabel addresses agar data alamat ditarik dengan benar
+  const customer: any = await c.env.DB.prepare(`
+    SELECT u.id, u.name, u.email, u.phone, a.address 
+    FROM users u 
+    LEFT JOIN addresses a ON a.user_id = u.id AND a.is_default = 1 
+    WHERE u.id = ?
+  `).bind(payload.id).first()
 
   if (!customer) {
     return c.text("Data pengguna tidak ditemukan di database.", 404)
