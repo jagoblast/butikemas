@@ -44,7 +44,7 @@ checkoutApi.post('/', async (c) => {
       amount: amountAsInt,
       payment_method: method,
       reference_id: orderId,
-      customer_name: 'Logam Mulia',
+      customer_name: customer.name,
       customer_email: customer.email || ''
     }
 
