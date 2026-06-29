@@ -33,12 +33,46 @@ export default function CheckoutView({ customer }: { customer: any }) {
   const paymentFee = selectedPayment ? selectedPayment.fee : 0
 
   useEffect(() => {
-    const checkoutItems = JSON.parse(localStorage.getItem('butikemas_checkout_items') || '[]')
-    if (checkoutItems.length === 0) {
-      window.location.href = '/cart'
-    } else {
+    const fetchCheckoutData = async () => {
+      const checkoutItems = JSON.parse(localStorage.getItem('butikemas_checkout_items') || '[]')
+      if (checkoutItems.length === 0) {
+        window.location.href = '/cart'
+        return
+      }
+
+      // Tampilkan data dari local storage lebih dulu
       setItems(checkoutItems)
+
+      try {
+        const productIds = checkoutItems.map((item: any) => item.product.id)
+        
+        // Fetch ke endpoint API baru
+        const response = await fetch('/api/cart-details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productIds })
+        })
+        
+        const result = await response.json()
+
+        if (result.success) {
+          const hydratedItems = checkoutItems.map((localItem: any) => {
+            const dbProduct = result.data.find((p: any) => p.id === localItem.product.id)
+            return {
+              ...localItem,
+              product: dbProduct || localItem.product 
+            }
+          })
+
+          setItems(hydratedItems)
+          localStorage.setItem('butikemas_checkout_items', JSON.stringify(hydratedItems))
+        }
+      } catch (error) {
+        console.error("Gagal sinkronisasi checkout:", error)
+      }
     }
+
+    fetchCheckoutData()
   }, [])
 
   const subtotal = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
@@ -66,7 +100,8 @@ export default function CheckoutView({ customer }: { customer: any }) {
           product_name: item.product.name, // TAMBAHKAN INI UNTUK DB BACKEND
           price: item.product.price,       // TAMBAHKAN INI UNTUK DB BACKEND
           quantity: item.quantity,
-          product_image: item.product.image_url || item.product.images?.[0]?.image_url || ''
+          // Gunakan langsung image_url yang sudah bersih
+          product_image: item.product.image_url || ''
         }))
       }
 
@@ -132,7 +167,8 @@ export default function CheckoutView({ customer }: { customer: any }) {
             {items.map((item, idx) => (
               <div key={idx} className="flex gap-4 items-center pb-4 border-b border-gray-100 last:border-0 last:pb-0">
                 <div className="w-16 h-16 bg-surface rounded-lg border border-navy-100 p-1 flex items-center justify-center shrink-0">
-                  <img src={item.product.image_url || item.product.images?.[0]?.image_url || 'https://emas.pasdigi.id/images/metal-gold.jpg'} alt={item.product.name} className="object-contain w-full h-full" />
+                  {/* Pemanggilan gambar bersih */}
+                  <img src={item.product.image_url || 'https://emas.pasdigi.id/images/metal-gold.jpg'} alt={item.product.name} className="object-contain w-full h-full" />
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-navy-900 text-sm">{item.product.name}</p>
@@ -233,7 +269,7 @@ export default function CheckoutView({ customer }: { customer: any }) {
       </main>
 
       {/* FOOTER CHECKOUT (Tetap Sama) */}
-      <div className="fixed bottom-16 md:bottom-0 left-0 w-full z-50 bg-white border-t border-navy-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+      <div className="fixed bottom-0 left-0 w-full z-50 bg-white border-t border-navy-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
         <div className="max-w-3xl mx-auto">
           <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/50">
             <div className="flex justify-between items-center mb-1">
