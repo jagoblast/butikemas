@@ -3,15 +3,14 @@ import { Hono } from 'hono'
 const checkoutApi = new Hono<{ Bindings: Env['Bindings'] }>()
 
 checkoutApi.post('/', async (c) => {
-  // Ambil ID Pelanggan langsung dari token JWT yang sudah diverifikasi middleware
   const payload = c.get('jwtPayload')
   const customerId = payload.id
 
   const body = await c.req.json()
-  const { shipping_address, items, total_amount, payment_method } = body
+  // shipping_address dihapus dari sini
+  const { items, total_amount, payment_method } = body
 
   try {
-    // 1. Ambil data asli pelanggan dari Database
     const customer: any = await c.env.DB.prepare(
       'SELECT name, email, phone FROM users WHERE id = ?'
     ).bind(customerId).first()
@@ -20,10 +19,8 @@ checkoutApi.post('/', async (c) => {
       return c.json({ success: false, message: 'Data pengguna tidak valid' }, 401)
     }
 
-    // 2. Generate Invoice ID
     const orderId = `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`
 
-    // 3. Ambil Kredensial Payment Gateway dari DB
     const dbSettings: any = await c.env.DB.prepare(
       `SELECT setting_data FROM system_settings WHERE setting_key = 'OMNIPAYGATE_CREDENTIALS'`
     ).first()
@@ -34,10 +31,19 @@ checkoutApi.post('/', async (c) => {
 
     const gatewayCreds = JSON.parse(dbSettings.setting_data)
 
-    // 4. Request ke API Omnipaygate (Gunakan data dari DB, bukan dari Frontend)
+    const amountAsInt = Math.floor(Number(total_amount))
+    
+    const allowedMethods = ['qris', 'usdt', 'bni', 'bri', 'mandiri', 'cimb', 'permata', 'bsi', 'seabank']
+    const method = payment_method.toLowerCase()
+    
+    if (!allowedMethods.includes(method)) {
+      return c.json({ success: false, message: 'Metode pembayaran tidak valid' }, 400)
+    }
+
+    // Payload yang dikirim ke API murni HANYA yang ada di dokumentasi
     const gatewayPayload = {
-      amount: total_amount,
-      payment_method: payment_method.toLowerCase(), // qris, bca_va
+      amount: amountAsInt,
+      payment_method: method,
       reference_id: orderId,
       customer_name: customer.name,
       customer_email: customer.email || ''
@@ -56,18 +62,21 @@ checkoutApi.post('/', async (c) => {
     const gatewayData: any = await gatewayRes.json()
 
     if (!gatewayRes.ok || !gatewayData.success) {
-      return c.json({ success: false, message: 'Gagal membuat tagihan di Payment Gateway' }, 400)
+      console.error("DEBUG GATEWAY RESP:", JSON.stringify(gatewayData))
+      return c.json({ 
+        success: false, 
+        message: 'Gagal membuat tagihan: ' + (gatewayData.message || 'Cek format data') 
+      }, 400)
     }
 
-    // 5. Simpan Data Order dengan 'customer_id' agar masuk ke Riwayat Transaksi!
+    // shipping_address dihapus dari query INSERT orders
     await c.env.DB.prepare(
-      `INSERT INTO orders (id, customer_id, customer_name, customer_email, customer_phone, shipping_address, total_amount, payment_method, status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`
+      `INSERT INTO orders (id, customer_id, customer_name, customer_email, customer_phone, total_amount, payment_method, status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')`
     ).bind(
-      orderId, customerId, customer.name, customer.email, customer.phone, shipping_address, total_amount, payment_method
+      orderId, customerId, customer.name, customer.email, customer.phone, amountAsInt, method
     ).run()
 
-    // 6. Simpan Item Keranjang 
     for (const item of items) {
       await c.env.DB.prepare(
         `INSERT INTO order_items (order_id, product_id, product_name, quantity, price_at_checkout)
