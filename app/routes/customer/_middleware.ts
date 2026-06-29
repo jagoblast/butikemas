@@ -1,16 +1,35 @@
 import { createRoute } from 'honox/factory'
-import { getCookie } from 'hono/cookie'
+import { getCookie, deleteCookie } from 'hono/cookie'
+import { verify } from 'hono/jwt'
 
 export default createRoute(async (c, next) => {
-  // Mengecek cookie sesi login milik customer
-  // (Pastikan nama cookie ini sesuai dengan yang di-set saat login customer di auth.ts)
+  // 1. Ambil token dari cookie
   const token = getCookie(c, 'customer_session')
 
   if (!token) {
-    // Jika belum login, lempar ke halaman login dengan query parameter redirect
-    return c.redirect('/login?redirect=/customer/orders')
+    // Jika tidak ada token sama sekali, lempar ke login
+    return c.redirect(`/login?redirect=${encodeURIComponent(c.req.path)}`)
   }
 
-  // Jika token ada, izinkan render komponen HonoX
-  await next()
+  try {
+    // 2. VERIFIKASI JWT SECARA EKSPLISIT
+    // Memastikan token valid, belum expired, dan ditandatangani dengan algoritma HS256
+    const decodedPayload = await verify(token, c.env.JWT_SECRET, 'HS256')
+    
+    // (Opsional) Simpan data user ke context agar bisa diakses di route handler
+    c.set('jwtPayload', decodedPayload)
+
+    // Lanjut render halaman checkout/orders
+    await next()
+
+  } catch (error) {
+    // 3. JIKA TOKEN TIDAK VALID ATAU EXPIRED
+    console.error("JWT Verification failed:", error)
+    
+    // Hapus cookie yang sudah usang/rusak agar tidak menyangkut di browser
+    deleteCookie(c, 'customer_session', { path: '/' })
+    
+    // Lempar kembali ke login
+    return c.redirect(`/login?redirect=${encodeURIComponent(c.req.path)}`)
+  }
 })
