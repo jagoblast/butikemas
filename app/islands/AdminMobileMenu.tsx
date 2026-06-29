@@ -48,6 +48,11 @@ export default function AdminMobileMenu() {
           <a href="/admin/products" className={isActive('/admin/products') ? activeClass : inactiveClass}>Katalog Produk</a>
           <a href="/admin/orders" className={isActive('/admin/orders') ? activeClass : inactiveClass}>Pesanan</a>
           <a href="/admin/customers" className={isActive('/admin/customers') ? activeClass : inactiveClass}>Pelanggan</a>
+          
+          {/* MENU BARU DITAMBAHKAN DI SINI */}
+          <a href="/admin/vouchers" className={isActive('/admin/vouchers') ? activeClass : inactiveClass}>Voucher & Diskon</a>
+          <a href="/admin/reviews" className={isActive('/admin/reviews') ? activeClass : inactiveClass}>Ulasan Produk</a>
+          
           <a href="/admin/articles" className={isActive('/admin/articles') ? activeClass : inactiveClass}>Artikel & Edukasi</a>
           <a href="/admin/settings" className={isActive('/admin/settings') ? activeClass : inactiveClass}>Pengaturan Sistem</a>
           
