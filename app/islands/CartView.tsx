@@ -157,7 +157,7 @@ export default function CartView({ isLoggedIn }: { isLoggedIn?: boolean }) {
         </div>
       </main>
 
-      <div className="fixed bottom-0 left-0 w-full z-30 shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
+      <div className="fixed bottom-16 md:bottom-0 left-0 w-full z-30 shadow-[0_-8px_30px_rgba(0,0,0,0.06)]">
         <div className={`w-full px-5 py-2.5 border-t flex justify-between items-center transition-colors ${
           hasAppliedVoucher ? 'border-green-200 bg-[#E8F5E9]' : 'border-navy-100 bg-white'
         }`}>
