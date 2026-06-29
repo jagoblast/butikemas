@@ -20,6 +20,7 @@ import webhookApi from './webhook'
 import settingsApi from './settings' 
 import dashboardApi from './dashboard'
 import reviewsApi from './reviews'
+import promosApi from './promos'
 
 const api = new Hono<{ Bindings: Env['Bindings'] }>()
 
@@ -36,7 +37,8 @@ api.route('/public/categories', categoriesApi)
 api.route('/public/company-profile', companyProfileApi)
 api.route('/public/metal-prices', metalPricesApi)
 api.route('/public/payment-methods', paymentMethodsApi)
-api.route('/public/reviews', reviewsApi) // TAMBAHAN: Rute Publik untuk Ulasan
+api.route('/public/reviews', reviewsApi)
+api.route('/public/promos', promosApi)
 
 // =================================================================
 // LAPISAN KEAMANAN JWT (MIDDLEWARE SATPAM)
@@ -69,14 +71,14 @@ api.route('/admin/categories', categoriesApi)
 api.route('/admin/company-profile', companyProfileApi)
 api.route('/admin/metal-prices', metalPricesApi)
 api.route('/admin/payment-methods', paymentMethodsApi)
-api.route('/admin/reviews', reviewsApi) // TAMBAHAN: Rute Admin untuk manajemen Ulasan
-
+api.route('/admin/reviews', reviewsApi)
+api.route('/admin/promos', promosApi)
 // =================================================================
 // AREA CUSTOMER
 // =================================================================
 api.route('/customer/checkout', checkoutApi)
 api.route('/customer/orders', ordersApi)
 api.route('/customer/profile', customersApi)
-api.route('/customer/reviews', reviewsApi) // TAMBAHAN: Rute Customer untuk posting Ulasan
+api.route('/customer/reviews', reviewsApi)
 
 export default api
