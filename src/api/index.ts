@@ -18,6 +18,7 @@ import vouchersApi from './vouchers'
 import shippingApi from './shipping' 
 import webhookApi from './webhook' 
 import settingsApi from './settings' 
+import dashboardApi from './dashboard'
 
 const api = new Hono<{ Bindings: Env['Bindings'] }>()
 
@@ -53,6 +54,7 @@ api.use('/customer/*', async (c, next) => {
 // =================================================================
 // AREA ADMIN
 // =================================================================
+api.route('/admin/dashboard', dashboardApi)
 api.route('/admin/upload', uploadApi)
 api.route('/admin/settings', settingsApi) 
 api.route('/admin/orders', ordersApi)
