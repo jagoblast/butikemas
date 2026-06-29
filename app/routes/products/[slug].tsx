@@ -65,7 +65,7 @@ export default createRoute(async (c) => {
   const roundedRating = Math.round(displayRating)
 
   // Cek Status Login di Server!
-  const isLoggedIn = !!getCookie(c, 'customer_session')
+  const isLoggedIn = !!getCookie(c, 'butik_cust_session')
 
   return c.render(
     <div className="bg-surface min-h-screen">
