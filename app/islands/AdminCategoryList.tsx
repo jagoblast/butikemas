@@ -5,7 +5,7 @@ export default function AdminCategoryList() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/categories')
+    fetch('/api/admin/categories')
       .then(res => res.json())
       .then(data => {
         if (data.success) setCategories(data.data)
