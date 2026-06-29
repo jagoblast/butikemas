@@ -16,18 +16,60 @@ ordersApi.get('/', async (c) => {
 
   // Jika diakses oleh Customer
   if (path.includes('/customer/')) {
-    // Ekstrak ID dari token JWT yang sudah dilewati middleware
     const payload = c.get('jwtPayload')
     const customerId = payload.id
 
+    // PERBAIKAN: Gunakan 'user_id' agar cocok dengan data checkout yang baru
     const { results } = await c.env.DB.prepare(
-      'SELECT id, total_amount, status, created_at FROM orders WHERE customer_id = ? ORDER BY created_at DESC'
+      'SELECT id, total_amount, status, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC'
     ).bind(customerId).all()
     
     return c.json({ success: true, data: results })
   }
 
   return c.json({ success: false, message: 'Akses ditolak' }, 403)
+})
+
+// [GET] Ambil Detail Pesanan (TAMBAHAN BARU UNTUK MENGATASI ERROR)
+ordersApi.get('/:id', async (c) => {
+  const orderId = c.req.param('id')
+  const path = c.req.path
+
+  try {
+    // 1. Ambil data induk pesanan
+    const order: any = await c.env.DB.prepare(
+      'SELECT * FROM orders WHERE id = ?'
+    ).bind(orderId).first()
+
+    if (!order) {
+      return c.json({ success: false, message: 'Pesanan tidak ditemukan' }, 404)
+    }
+
+    // 2. Jika diakses Customer, pastikan pesanan ini benar-benar miliknya
+    if (path.includes('/customer/')) {
+      const payload = c.get('jwtPayload')
+      if (order.user_id !== payload.id) {
+        return c.json({ success: false, message: 'Akses ditolak, ini bukan pesanan Anda' }, 403)
+      }
+    }
+
+    // 3. Ambil daftar barang (items) yang ada di pesanan ini
+    const { results: items } = await c.env.DB.prepare(
+      'SELECT * FROM order_items WHERE order_id = ?'
+    ).bind(orderId).all()
+
+    // 4. Gabungkan dan kirim ke frontend
+    return c.json({ 
+      success: true, 
+      data: { 
+        ...order, 
+        items 
+      } 
+    })
+  } catch (error) {
+    console.error("Get Order Detail Error:", error)
+    return c.json({ success: false, message: 'Terjadi kesalahan sistem saat mengambil data' }, 500)
+  }
 })
 
 // [PUT] Update Status Pesanan (Hanya Admin)
