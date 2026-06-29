@@ -108,11 +108,15 @@ export default function CartView({ isLoggedIn }: { isLoggedIn?: boolean }) {
               </div>
               <div className="flex-grow flex flex-col sm:flex-row gap-4">
                 <div className="w-24 h-24 bg-surface rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center border border-navy-200 relative p-2">
-                  {item.product.image_url ? (
-                    <img src={item.product.image_url} alt={item.product.name} className="object-contain w-full h-full" />
-                  ) : (
-                    <ShoppingCart className="w-8 h-8 text-gold-400/60" />
-                  )}
+                  {(item.product.image_url || item.product.images?.[0]?.image_url) ? (
+                  <img 
+                    src={item.product.image_url || item.product.images?.[0]?.image_url} 
+                    alt={item.product.name} 
+                    className="object-contain w-full h-full" 
+                  />
+                ) : (
+                  <ShoppingCart className="w-8 h-8 text-gold-400/60" />
+                )}
                 </div>
                 <div className="flex-grow flex flex-col">
                   <div className="flex justify-between items-start mb-1 gap-3">
