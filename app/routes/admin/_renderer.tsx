@@ -44,7 +44,6 @@ export default jsxRenderer(({ children, title }, c) => {
             <div className="flex h-20 items-center justify-between border-b border-white/10 px-4">
               <a href="/admin" className="flex items-center gap-3 min-w-0">
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm p-1.5">
-                  {/* URL Gambar Eksternal Diperbarui */}
                   <img 
                     src="https://emas.pasdigi.id/images/logo-lm.png" 
                     alt="Logo Logam Mulia" 
@@ -77,7 +76,18 @@ export default jsxRenderer(({ children, title }, c) => {
                 <span>Pelanggan</span>
               </a>
               
-              {/* MENU ARTIKEL & EDUKASI YANG DITAMBAHKAN */}
+              {/* MENU VOUCHER & DISKON */}
+              <a href="/admin/vouchers" className={isActive('/admin/vouchers') ? activeClass : inactiveClass}>
+                <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" /></svg>
+                <span>Voucher & Diskon</span>
+              </a>
+
+              {/* MENU ULASAN PRODUK */}
+              <a href="/admin/reviews" className={isActive('/admin/reviews') ? activeClass : inactiveClass}>
+                <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
+                <span>Ulasan Produk</span>
+              </a>
+
               <a href="/admin/articles" className={isActive('/admin/articles') ? activeClass : inactiveClass}>
                 <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H15" /></svg>
                 <span>Artikel & Edukasi</span>
