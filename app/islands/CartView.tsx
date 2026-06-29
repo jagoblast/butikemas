@@ -23,8 +23,46 @@ export default function CartView({ isLoggedIn }: { isLoggedIn?: boolean }) {
   const saveCheckoutItems = (nextItems: any[]) => localStorage.setItem('butikemas_checkout_items', JSON.stringify(nextItems))
 
   useEffect(() => {
-    const storedItems = readCartItems()
-    setItems(storedItems)
+    const fetchCartData = async () => {
+      const localCart = readCartItems()
+      if (localCart.length === 0) {
+        setItems([])
+        return
+      }
+
+      // Tampilkan data lokal terlebih dahulu agar UI tidak kosong saat loading
+      setItems(localCart)
+
+      try {
+        const productIds = localCart.map((item: any) => item.product.id)
+        
+        // Panggil endpoint API untuk merehidrasi data produk (gambar, harga, stok)
+        const response = await fetch('/api/cart-details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productIds })
+        })
+        
+        const result = await response.json()
+
+        if (result.success) {
+          const hydratedCart = localCart.map((localItem: any) => {
+            const dbProduct = result.data.find((p: any) => p.id === localItem.product.id)
+            return {
+              ...localItem, // Pertahankan quantity dan status checked dari lokal
+              product: dbProduct || localItem.product 
+            }
+          })
+
+          setItems(hydratedCart)
+          saveCartItems(hydratedCart) // Perbarui local storage dengan data yang lebih segar
+        }
+      } catch (error) {
+        console.error("Gagal sinkronisasi keranjang:", error)
+      }
+    }
+
+    fetchCartData()
   }, [])
 
   function persistItems(nextItems: any[]) {
@@ -108,15 +146,20 @@ export default function CartView({ isLoggedIn }: { isLoggedIn?: boolean }) {
               </div>
               <div className="flex-grow flex flex-col sm:flex-row gap-4">
                 <div className="w-24 h-24 bg-surface rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center border border-navy-200 relative p-2">
-                  {(item.product.image_url || item.product.images?.[0]?.image_url) ? (
-                  <img 
-                    src={item.product.image_url || item.product.images?.[0]?.image_url} 
-                    alt={item.product.name} 
-                    className="object-contain w-full h-full" 
-                  />
-                ) : (
-                  <ShoppingCart className="w-8 h-8 text-gold-400/60" />
-                )}
+                  {/* Pemanggilan gambar yang sudah dibersihkan dan mengandalkan data DB */}
+                  {item.product.image_url ? (
+                    <img 
+                      src={item.product.image_url} 
+                      alt={item.product.name} 
+                      className="object-contain w-full h-full" 
+                    />
+                  ) : (
+                    <img 
+                      src="https://emas.pasdigi.id/images/metal-gold.jpg" 
+                      alt={item.product.name} 
+                      className="object-contain w-full h-full" 
+                    />
+                  )}
                 </div>
                 <div className="flex-grow flex flex-col">
                   <div className="flex justify-between items-start mb-1 gap-3">
