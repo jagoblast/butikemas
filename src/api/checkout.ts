@@ -7,8 +7,8 @@ checkoutApi.post('/', async (c) => {
   const customerId = payload.id
 
   const body = await c.req.json()
-  // shipping_address dihapus dari sini
-  const { items, total_amount, payment_method } = body
+  // PENTING: Tangkap kembali data dari frontend
+  const { items, total_amount, payment_method, shipping_address } = body
 
   try {
     const customer: any = await c.env.DB.prepare(
@@ -40,7 +40,6 @@ checkoutApi.post('/', async (c) => {
       return c.json({ success: false, message: 'Metode pembayaran tidak valid' }, 400)
     }
 
-    // Payload yang dikirim ke API murni HANYA yang ada di dokumentasi
     const gatewayPayload = {
       amount: amountAsInt,
       payment_method: method,
@@ -69,19 +68,46 @@ checkoutApi.post('/', async (c) => {
       }, 400)
     }
 
-    // shipping_address dihapus dari query INSERT orders
+    // PERBAIKAN: Gunakan 'user_id', dan tambahkan field NOT NULL lainnya seperti shipping_cost, grand_total, dll.
     await c.env.DB.prepare(
-      `INSERT INTO orders (id, customer_id, customer_name, customer_email, customer_phone, total_amount, payment_method, status) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')`
+      `INSERT INTO orders (
+        id, user_id, customer_name, customer_email, customer_phone, 
+        total_amount, grand_total, shipping_cost, shipping_address, shipping_city,
+        payment_method, status
+      ) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')`
     ).bind(
-      orderId, customerId, customer.name, customer.email, customer.phone, amountAsInt, method
+      orderId, 
+      customerId, // Mengganti customer_id menjadi user_id sesuai DB
+      customer.name, 
+      customer.email, 
+      customer.phone, 
+      amountAsInt, // total_amount
+      amountAsInt, // grand_total 
+      0, // shipping_cost (sementara hardcode 0 atau lempar dari frontend)
+      shipping_address || 'Alamat tidak diatur', // shipping_address
+      '-', // shipping_city
+      method
     ).run()
 
     for (const item of items) {
+      // Generate ID untuk order_item karena wajib diisi
+      const orderItemId = `ITEM-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+      const subtotal = item.price * item.quantity
+
+      // PERBAIKAN: Masukkan id, ganti kolom ke 'price_at_purchase', dan tambahkan 'subtotal'
       await c.env.DB.prepare(
-        `INSERT INTO order_items (order_id, product_id, product_name, quantity, price_at_checkout)
-         VALUES (?, ?, ?, ?, ?)`
-      ).bind(orderId, item.product_id, item.product_name, item.quantity, item.price).run()
+        `INSERT INTO order_items (id, order_id, product_id, product_name, price_at_purchase, quantity, subtotal)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        orderItemId, 
+        orderId, 
+        item.product_id, 
+        item.product_name, 
+        item.price, 
+        item.quantity, 
+        subtotal
+      ).run()
       
       await c.env.DB.prepare(
         'UPDATE products SET stock = stock - ? WHERE id = ?'
