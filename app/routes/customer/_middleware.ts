@@ -12,8 +12,7 @@ type Env = {
 }
 
 export default createRoute<Env>(async (c, next) => {
-  // PERBAIKAN UTAMA: Tambahkan Header Anti-Cache
-  // Ini memaksa browser untuk selalu mengecek sesi ke server, bukan mengandalkan memori cache 302 lama
+  // Matikan cache agresif browser agar tidak terjadi loop redirect
   c.header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
   c.header('Pragma', 'no-cache')
   c.header('Expires', '0')
@@ -24,21 +23,27 @@ export default createRoute<Env>(async (c, next) => {
     return c.redirect(`/login?redirect=${encodeURIComponent(c.req.path)}`)
   }
 
+  if (!c.env.JWT_SECRET) {
+    return c.html('<h1>[FATAL ERROR] JWT_SECRET hilang atau tidak diset di Environment Variables (Cloudflare Pages)!</h1>', 500)
+  }
+
+  let decodedPayload;
+
+  // 1. BLOK TRY-CATCH HANYA UNTUK VERIFIKASI JWT
   try {
-    if (!c.env.JWT_SECRET) {
-      return c.html('<h1>[FATAL ERROR] JWT_SECRET hilang atau tidak diset di Environment Variables (Cloudflare Pages)!</h1>', 500)
-    }
-
-    // Verifikasi secara ketat
-    const decodedPayload = await verify(token, c.env.JWT_SECRET, 'HS256')
-    c.set('jwtPayload', decodedPayload)
-    
-    await next()
-
+    decodedPayload = await verify(token, c.env.JWT_SECRET, 'HS256')
   } catch (error) {
     console.error("⚠️ JWT Verification failed di Middleware:", error)
     
+    // Jika token benar-benar kadaluarsa/rusak, hapus dan redirect
     deleteCookie(c, 'butik_cust_session', { path: '/' })
     return c.redirect(`/login?redirect=${encodeURIComponent(c.req.path)}`)
   }
+
+  // 2. SET PAYLOAD JIKA BERHASIL
+  c.set('jwtPayload', decodedPayload)
+  
+  // 3. JALANKAN HALAMAN DI LUAR TRY-CATCH! 
+  // Jika checkout.tsx error, sekarang ia akan menampilkan Error 500 normal, bukan menendang user ke halaman login.
+  await next()
 })
