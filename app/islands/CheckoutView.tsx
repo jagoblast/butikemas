@@ -233,7 +233,7 @@ export default function CheckoutView({ customer }: { customer: any }) {
       </main>
 
       {/* FOOTER CHECKOUT (Tetap Sama) */}
-      <div className="fixed bottom-0 left-0 w-full z-50 bg-white border-t border-navy-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+      <div className="fixed bottom-16 md:bottom-0 left-0 w-full z-50 bg-white border-t border-navy-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
         <div className="max-w-3xl mx-auto">
           <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/50">
             <div className="flex justify-between items-center mb-1">
