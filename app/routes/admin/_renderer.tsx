@@ -75,6 +75,12 @@ export default jsxRenderer(({ children, title }, c) => {
                 <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                 <span>Pelanggan</span>
               </a>
+
+              {/* MENU PROMO / FLASH SALE */}
+              <a href="/admin/promos" className={isActive('/admin/promos') ? activeClass : inactiveClass}>
+                <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                <span>Promo Event</span>
+              </a>
               
               {/* MENU VOUCHER & DISKON */}
               <a href="/admin/vouchers" className={isActive('/admin/vouchers') ? activeClass : inactiveClass}>
