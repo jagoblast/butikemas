@@ -8,8 +8,9 @@ export default jsxRenderer(({ children, title }, c) => {
   const currentPath = c.req.path
   
   // 1. Cek cookie langsung di sisi server secara aman
-  const customerSession = getCookie(c, 'customer_session')
-  const isLoggedIn = !!customerSession
+  const customerSession = getCookie(c, 'butik_cust_session')
+  const adminSession = getCookie(c, 'butik_admin_session')
+  const isLoggedIn = !!(customerSession || adminSession)
 
   return (
     <html lang="id">
