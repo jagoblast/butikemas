@@ -38,12 +38,14 @@ api.route('/public/payment-methods', paymentMethodsApi)
 // 🛡️ LAPISAN KEAMANAN JWT (MIDDLEWARE SATPAM)
 // =================================================================
 api.use('/admin/*', async (c, next) => {
-  const jwtMiddleware = jwt({ secret: c.env.JWT_SECRET, alg: 'HS256', cookie: 'admin_session' })
+  // PERBAIKAN: Gunakan butik_admin_session agar sesuai dengan auth.ts
+  const jwtMiddleware = jwt({ secret: c.env.JWT_SECRET, alg: 'HS256', cookie: 'butik_admin_session' })
   return jwtMiddleware(c, next)
 })
 
 api.use('/customer/*', async (c, next) => {
-  const jwtMiddleware = jwt({ secret: c.env.JWT_SECRET, alg: 'HS256', cookie: 'customer_session' })
+  // PERBAIKAN: Gunakan butik_cust_session agar sesuai dengan auth.ts
+  const jwtMiddleware = jwt({ secret: c.env.JWT_SECRET, alg: 'HS256', cookie: 'butik_cust_session' })
   return jwtMiddleware(c, next)
 })
 
