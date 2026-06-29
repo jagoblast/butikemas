@@ -6,17 +6,40 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
   const [uploadingImage, setUploadingImage] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   
+  // 1. TAMBAHAN: State untuk menyimpan daftar kategori dari database
+  const [categories, setCategories] = useState<any[]>([])
+  
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
     description: '',
     price: '',
     weight_gram: '',
-    kadar: '999.9', // Default emas murni standar Antam
+    kadar: '999.9',
     stock: '',
-    category_id: 'cat-emas-batangan', // Default kategori string sesuai database seed
+    category_id: '', // Dikosongkan agar memaksa user memilih
     image_url: ''
   })
+
+  // 2. TAMBAHAN: Memuat data kategori dari backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('/api/admin/categories')
+        const data = await res.json()
+        if (res.ok && data.success) {
+          setCategories(data.data)
+          // Jika ini buat produk baru dan belum ada kategori yang dipilih, set default ke kategori pertama
+          if (!productId && data.data.length > 0) {
+            setFormData(prev => ({ ...prev, category_id: data.data[0].id }))
+          }
+        }
+      } catch (error) {
+        console.error('Gagal mengambil daftar kategori:', error)
+      }
+    }
+    fetchCategories()
+  }, [])
 
   // Memuat data prapengisian ketika dalam mode edit
   useEffect(() => {
@@ -35,7 +58,7 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
               weight_gram: p.weight_gram?.toString() || '',
               kadar: p.kadar || '999.9',
               stock: p.stock?.toString() || '',
-              category_id: p.category_id || 'cat-emas-batangan',
+              category_id: p.category_id || '',
               image_url: p.image_url || ''
             })
           } else {
@@ -62,7 +85,6 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
     })
   }
 
-  // Handler untuk mengupload file secara streaming ke Cloudinary melalui backend upload.ts
   const handleFileChange = async (e: any) => {
     const file = e.target.files[0]
     if (!file) return
@@ -74,7 +96,6 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
     uploadData.append('file', file)
 
     try {
-      // Menembak endpoint API upload utama yang sudah Anda buat
       const res = await fetch('/api/admin/upload', {
         method: 'POST',
         body: uploadData
@@ -82,7 +103,6 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
       const data = await res.json()
 
       if (res.ok && data.success) {
-        // Menggunakan data.image_url sesuai kembalian dari upload.ts
         setFormData(prev => ({ ...prev, image_url: data.image_url }))
         setMessage({ type: 'success', text: 'Gambar berhasil diunggah ke Cloudinary!' })
       } else {
@@ -101,6 +121,12 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
       setMessage({ type: 'error', text: 'Harap tunggu hingga proses unggah file selesai.' })
       return
     }
+    
+    // Validasi tambahan
+    if (!formData.category_id) {
+      setMessage({ type: 'error', text: 'Silakan pilih kategori produk terlebih dahulu.' })
+      return
+    }
 
     setLoading(true)
     setMessage(null)
@@ -111,7 +137,6 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
         price: Number(formData.price),
         weight_gram: Number(formData.weight_gram),
         stock: Number(formData.stock)
-        // category_id dikirim utuh berupa string ('cat-emas-batangan') ke API
       }
 
       const method = productId ? 'PUT' : 'POST'
@@ -128,7 +153,8 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
       if (res.ok && data.success) {
         setMessage({ type: 'success', text: productId ? 'Produk berhasil diperbarui!' : 'Produk berhasil ditambahkan!' })
         if (!productId) {
-          setFormData({ name: '', slug: '', description: '', price: '', weight_gram: '', kadar: '999.9', stock: '', category_id: 'cat-emas-batangan', image_url: '' })
+          // Reset form ke default
+          setFormData({ name: '', slug: '', description: '', price: '', weight_gram: '', kadar: '999.9', stock: '', category_id: categories.length > 0 ? categories[0].id : '', image_url: '' })
         } else {
           setTimeout(() => {
             window.location.href = '/admin/products'
@@ -222,11 +248,17 @@ export default function AdminProductForm({ productId }: { productId?: string }) 
           <div>
             <label className="block text-sm font-semibold text-navy-900 mb-2">Kategori Produk</label>
             <select name="category_id" value={formData.category_id} onChange={handleInputChange} required className="w-full px-4 py-2.5 rounded-xl border border-navy-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-gold-400 focus:border-gold-400 outline-none transition-all">
-              <option value="cat-emas-batangan">Emas Batangan</option>
-              <option value="cat-emas-batik">Emas Batik Indonesia</option>
-              <option value="cat-gift-series">Gift Series</option>
-              <option value="cat-dinar-dirham">Dinar & Dirham</option>
+              {/* 3. PERBAIKAN: Looping data kategori dari state */}
+              <option value="" disabled>-- Pilih Kategori --</option>
+              {categories.map((cat: any) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
             </select>
+            {categories.length === 0 && (
+              <p className="text-xs text-red-500 mt-2">Belum ada kategori. Silakan buat kategori terlebih dahulu.</p>
+            )}
           </div>
         </div>
 
