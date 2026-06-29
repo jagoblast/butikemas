@@ -18,7 +18,7 @@ export default jsxRenderer(({ children, title }, c) => {
   const user = c.get('jwtPayload') || { name: 'Member' }
   
   // 3. Cek Status Login untuk BottomBar
-  const isLoggedIn = !!getCookie(c, 'customer_session')
+  const isLoggedIn = !!getCookie(c, 'butik_cust_session')
 
   return (
     <html lang="id">
