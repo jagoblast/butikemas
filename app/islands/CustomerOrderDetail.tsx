@@ -63,6 +63,17 @@ export default function CustomerOrderDetail({ orderId }: { orderId: string }) {
     )
   }
 
+  // --- PENAMBAHAN BARU: Membaca payment_method_config ---
+  let paymentConfig: any = null
+  try {
+    if (order.payment_method_config) {
+      paymentConfig = JSON.parse(order.payment_method_config)
+    }
+  } catch (e) { 
+    console.error("Gagal parse payment config") 
+  }
+  // --------------------------------------------------------
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -107,8 +118,16 @@ export default function CustomerOrderDetail({ orderId }: { orderId: string }) {
                   </div>
                   <div className="flex-1">
                     <h4 className="font-bold text-navy-900 leading-tight mb-1">{item.product_name}</h4>
-                    <p className="text-xs text-navy-500 mb-2">{item.quantity} x {formatRupiah(item.price)}</p>
-                    <p className="text-sm font-bold text-gold-600">{formatRupiah(item.quantity * item.price)}</p>
+                    
+                    {/* --- PERBAIKAN: item.price diubah ke item.price_at_purchase --- */}
+                    <p className="text-xs text-navy-500 mb-2">
+                      {item.quantity} x {formatRupiah(item.price_at_purchase)}
+                    </p>
+                    <p className="text-sm font-bold text-gold-600">
+                      {formatRupiah(item.subtotal || (item.quantity * item.price_at_purchase))}
+                    </p>
+                    {/* -------------------------------------------------------------- */}
+                    
                   </div>
                 </div>
               ))}
@@ -165,6 +184,39 @@ export default function CustomerOrderDetail({ orderId }: { orderId: string }) {
                 {formatRupiah(order.total_amount)}
               </span>
             </div>
+
+            {/* --- PENAMBAHAN BARU: Menampilkan QRIS / Virtual Account jika PENDING --- */}
+            {order.status === 'PENDING' && paymentConfig?.payment_details && (
+              <div className="mt-6 flex flex-col items-center text-center p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <p className="font-bold text-navy-900 mb-3 uppercase text-sm">Menunggu Pembayaran via {order.payment_method}</p>
+                
+                {paymentConfig.payment_details.qr_string ? (
+                  <>
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(paymentConfig.payment_details.qr_string)}`} 
+                      alt="QRIS Code" 
+                      className="w-40 h-40 mix-blend-multiply mb-3 border p-2 bg-white rounded-lg shadow-sm"
+                    />
+                    <p className="text-xs text-gray-500">Scan QR Code di atas menggunakan aplikasi M-Banking atau E-Wallet Anda.</p>
+                  </>
+                ) : paymentConfig.payment_details.va_number ? (
+                  <>
+                    <p className="text-xs text-gray-500 mb-1">Nomor Virtual Account:</p>
+                    <p className="text-xl font-bold text-blue-600 tracking-wider font-mono bg-blue-50 px-4 py-2 rounded-lg border border-blue-100">
+                      {paymentConfig.payment_details.va_number}
+                    </p>
+                  </>
+                ) : null}
+
+                {paymentConfig.payment_details.expired_at && (
+                  <p className="text-xs font-bold text-red-500 mt-4 bg-red-50 px-3 py-1.5 rounded-md border border-red-100">
+                    Selesaikan sebelum: {new Date(paymentConfig.payment_details.expired_at * 1000).toLocaleString('id-ID')}
+                  </p>
+                )}
+              </div>
+            )}
+            {/* ------------------------------------------------------------------------- */}
+
           </div>
         </div>
 
